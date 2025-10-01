@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta de Precio - Alto Carwash</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .alert-title {
+            color: #dc2626;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .price-info {
+            background-color: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .old-price {
+            text-decoration: line-through;
+            color: #6b7280;
+            font-size: 18px;
+        }
+        .new-price {
+            color: #dc2626;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .discount {
+            background-color: #dc2626;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .provider-info {
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #dc2626;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚗 Alto Carwash</div>
+            <h1 class="alert-title">¡Alerta de Precio!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hola <strong>{{userName}}</strong>,</p>
+            
+            <p>¡Tenemos una excelente noticia! El precio del servicio que estás monitoreando ha bajado.</p>
+            
+            <div class="price-info">
+                <h3>{{serviceName}}</h3>
+                <div class="old-price">${{oldPrice}}</div>
+                <div class="new-price">${{newPrice}}</div>
+                <div class="discount">-{{discountPercent}}% de descuento</div>
+            </div>
+            
+            <div class="provider-info">
+                <h4>{{providerName}}</h4>
+                <p>📍 {{providerAddress}}</p>
+                <p>⭐ {{providerRating}}/5 ({{reviewCount}} reseñas)</p>
+                <p>📞 {{providerPhone}}</p>
+            </div>
+            
+            <p>¡No pierdas esta oportunidad! Este precio especial puede ser por tiempo limitado.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{serviceUrl}}" class="cta-button">Ver Servicio</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>¿Ya no quieres recibir estas alertas? <a href="{{unsubscribeUrl}}">Cancelar suscripción</a></p>
+            <p>© 2024 Alto Carwash. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
