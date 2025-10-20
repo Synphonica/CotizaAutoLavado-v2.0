@@ -1,19 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServiceItem } from "@/components/ServiceCard";
-import { 
-  Star, 
-  MapPin, 
-  Clock, 
-  Phone, 
-  Mail, 
-  Heart, 
-  Share2, 
+import {
+  Star,
+  MapPin,
+  Clock,
+  Phone,
+  Mail,
+  Heart,
+  Share2,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -22,8 +22,13 @@ import {
   Award,
   Users,
   Clock as ClockIcon,
-  MapPin as MapPinIcon
+  MapPin as MapPinIcon,
+  X
 } from "lucide-react";
+import BookingCalendar from "@/components/booking/BookingCalendar";
+import TimeSlotPicker from "@/components/booking/TimeSlotPicker";
+import BookingForm from "@/components/booking/BookingForm";
+import { TimeSlot } from "@/types/booking";
 
 // Mock data para el servicio detallado
 const mockServiceDetail = {
@@ -48,7 +53,7 @@ const mockServiceDetail = {
   totalReviews: 127,
   images: [
     "/api/placeholder/800/600",
-    "/api/placeholder/800/600", 
+    "/api/placeholder/800/600",
     "/api/placeholder/800/600",
     "/api/placeholder/800/600"
   ],
@@ -78,7 +83,7 @@ const mockServiceDetail = {
       helpful: 12
     },
     {
-      id: "2", 
+      id: "2",
       user: "Carlos Rodríguez",
       rating: 4,
       date: "2024-01-10",
@@ -102,6 +107,13 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+
+  // Estados para el modal de agendamiento
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingStep, setBookingStep] = useState<'calendar' | 'timeslot' | 'form' | 'success'>('calendar');
+  const [bookingDate, setBookingDate] = useState<Date | null>(null);
+  const [bookingSlot, setBookingSlot] = useState<TimeSlot | null>(null);
+
   const nextImage = () => {
     setSelectedImage((prev) => (prev + 1) % service.images.length);
   };
@@ -112,6 +124,49 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
 
   const toggleFavorite = () => {
     setIsFavorite(!isFavorite);
+  };
+
+  // Funciones para el flujo de agendamiento
+  const openBookingModal = () => {
+    setShowBookingModal(true);
+    setBookingStep('calendar');
+    setBookingDate(null);
+    setBookingSlot(null);
+  };
+
+  const closeBookingModal = () => {
+    setShowBookingModal(false);
+    setBookingStep('calendar');
+    setBookingDate(null);
+    setBookingSlot(null);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setBookingDate(date);
+    setBookingStep('timeslot');
+  };
+
+  const handleSlotSelect = (slot: TimeSlot) => {
+    setBookingSlot(slot);
+    setBookingStep('form');
+  };
+
+  const handleBookingSuccess = (bookingId: string) => {
+    setBookingStep('success');
+    setTimeout(() => {
+      closeBookingModal();
+      // Redirigir a la página de confirmación o detalles de la reserva
+      window.location.href = `/booking/${bookingId}`;
+    }, 3000);
+  };
+
+  const handleBackStep = () => {
+    if (bookingStep === 'timeslot') {
+      setBookingStep('calendar');
+      setBookingSlot(null);
+    } else if (bookingStep === 'form') {
+      setBookingStep('timeslot');
+    }
   };
 
   // Eliminamos la lógica compleja y usamos CSS puro para mejor rendimiento
@@ -151,7 +206,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     alt={service.name}
                     className="w-full h-full object-cover"
                   />
-                  
+
                   {/* Controles de imagen */}
                   <Button
                     variant="secondary"
@@ -175,9 +230,8 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     {service.images.map((_, index) => (
                       <button
                         key={index}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === selectedImage ? 'bg-white' : 'bg-white/50'
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-colors ${index === selectedImage ? 'bg-white' : 'bg-white/50'
+                          }`}
                         onClick={() => setSelectedImage(index)}
                       />
                     ))}
@@ -245,7 +299,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                       <TabsTrigger value="reviews">Reseñas</TabsTrigger>
                       <TabsTrigger value="provider">Proveedor</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="info" className="mt-6">
                       <div className="space-y-4">
                         <div>
@@ -265,7 +319,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                         </div>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="reviews" className="mt-6">
                       <div className="space-y-4">
                         {service.reviews.map((review) => (
@@ -278,11 +332,10 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                                     {[...Array(5)].map((_, i) => (
                                       <Star
                                         key={i}
-                                        className={`h-4 w-4 ${
-                                          i < review.rating
+                                        className={`h-4 w-4 ${i < review.rating
                                             ? 'fill-yellow-400 text-yellow-400'
                                             : 'text-gray-300'
-                                        }`}
+                                          }`}
                                       />
                                     ))}
                                   </div>
@@ -299,7 +352,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                         ))}
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="provider" className="mt-6">
                       <div className="space-y-4">
                         <div className="flex items-center gap-4">
@@ -385,30 +438,41 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg py-3"
-                    onClick={() => {
-                      const phone = service.provider.phone || "Teléfono no disponible";
-                      const message = `Hola, estoy interesado en el servicio "${service.name}" que vi en Alto Carwash. ¿Podrían darme más información?`;
-                      const whatsappUrl = `https://wa.me/56${phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(message)}`;
-                      window.open(whatsappUrl, '_blank');
-                    }}
+                  <Button
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg py-6 shadow-lg"
+                    onClick={openBookingModal}
                   >
-                    <Phone className="h-5 w-5 mr-2" />
-                    Contactar proveedor
+                    <Calendar className="h-5 w-5 mr-2" />
+                    Agendar servicio
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-lg py-3"
-                    onClick={() => {
-                      const address = encodeURIComponent(service.provider.address || 'Santiago, Chile');
-                      window.location.href = `/map?address=${address}&provider=${service.provider.businessName}`;
-                    }}
-                  >
-                    <MapPin className="h-5 w-5 mr-2" />
-                    Ver ubicación
-                  </Button>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      className="text-base py-3"
+                      onClick={() => {
+                        const phone = service.provider.phone || "Teléfono no disponible";
+                        const message = `Hola, estoy interesado en el servicio "${service.name}" que vi en Alto Carwash. ¿Podrían darme más información?`;
+                        const whatsappUrl = `https://wa.me/56${phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Contactar
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="text-base py-3"
+                      onClick={() => {
+                        const address = encodeURIComponent(service.provider.address || 'Santiago, Chile');
+                        window.location.href = `/map?address=${address}&provider=${service.provider.businessName}`;
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Ubicación
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="text-center">
@@ -433,7 +497,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     <p className="text-sm text-gray-600">{service.duration}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <MapPinIcon className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
@@ -441,7 +505,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     <p className="text-sm text-gray-600">{service.provider.address}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Star className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
@@ -459,7 +523,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                 <div>
                   <h4 className="font-medium text-gray-900 mb-1">Alto Carwash es un comparador</h4>
                   <p className="text-sm text-gray-600">
-                    Los precios mostrados son informativos. Para contratar el servicio debes contactar directamente con el proveedor. 
+                    Los precios mostrados son informativos. Para contratar el servicio debes contactar directamente con el proveedor.
                     Los precios y disponibilidad pueden variar.
                   </p>
                 </div>
@@ -467,6 +531,231 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
             </div>
           </motion.div>
         </div>
+
+        {/* Modal de Agendamiento */}
+        <AnimatePresence>
+          {showBookingModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={closeBookingModal}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header del Modal */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">Agendar Servicio</h2>
+                    <p className="text-blue-100">{service.name}</p>
+                  </div>
+                  <button
+                    onClick={closeBookingModal}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                {/* Progress Steps */}
+                {bookingStep !== 'success' && (
+                  <div className="px-6 pt-6 pb-4 bg-gray-50 border-b">
+                    <div className="flex items-center justify-center gap-4">
+                      {/* Step 1 */}
+                      <div className="flex items-center">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'calendar'
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : bookingDate
+                              ? 'bg-green-600 border-green-600 text-white'
+                              : 'border-gray-300 text-gray-400'
+                          }`}>
+                          {bookingDate ? (
+                            <CheckCircle className="w-6 h-6" />
+                          ) : (
+                            <Calendar className="w-5 h-5" />
+                          )}
+                        </div>
+                        <span className={`ml-2 text-sm font-medium ${bookingStep === 'calendar' || bookingDate ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                          Fecha
+                        </span>
+                      </div>
+
+                      {/* Connector */}
+                      <div className={`w-16 h-0.5 ${bookingDate ? 'bg-green-600' : 'bg-gray-300'
+                        }`} />
+
+                      {/* Step 2 */}
+                      <div className="flex items-center">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'timeslot'
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : bookingSlot
+                              ? 'bg-green-600 border-green-600 text-white'
+                              : 'border-gray-300 text-gray-400'
+                          }`}>
+                          {bookingSlot ? (
+                            <CheckCircle className="w-6 h-6" />
+                          ) : (
+                            <Clock className="w-5 h-5" />
+                          )}
+                        </div>
+                        <span className={`ml-2 text-sm font-medium ${bookingStep === 'timeslot' || bookingSlot ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                          Horario
+                        </span>
+                      </div>
+
+                      {/* Connector */}
+                      <div className={`w-16 h-0.5 ${bookingSlot ? 'bg-green-600' : 'bg-gray-300'
+                        }`} />
+
+                      {/* Step 3 */}
+                      <div className="flex items-center">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'form'
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'border-gray-300 text-gray-400'
+                          }`}>
+                          <CheckCircle className="w-5 h-5" />
+                        </div>
+                        <span className={`ml-2 text-sm font-medium ${bookingStep === 'form' ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                          Confirmar
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contenido del Modal */}
+                <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
+                  {/* Step 1: Calendario */}
+                  {bookingStep === 'calendar' && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                    >
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">
+                        Selecciona una Fecha
+                      </h3>
+                      <BookingCalendar
+                        selectedDate={bookingDate}
+                        onSelectDate={handleDateSelect}
+                        minDate={new Date()}
+                        disabledDates={[]}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Step 2: Horarios */}
+                  {bookingStep === 'timeslot' && bookingDate && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            Selecciona un Horario
+                          </h3>
+                          <p className="text-gray-600">
+                            {bookingDate.toLocaleDateString('es-CL', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleBackStep}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Volver
+                        </Button>
+                      </div>
+                      <TimeSlotPicker
+                        providerId={service.provider.id}
+                        date={bookingDate}
+                        duration={parseInt(service.duration.split('-')[0])}
+                        selectedSlot={bookingSlot}
+                        onSelectSlot={handleSlotSelect}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Step 3: Formulario */}
+                  {bookingStep === 'form' && bookingDate && bookingSlot && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Confirma tu Reserva
+                        </h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleBackStep}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Volver
+                        </Button>
+                      </div>
+                      <BookingForm
+                        providerId={service.provider.id}
+                        providerName={service.provider.businessName}
+                        serviceId={service.id}
+                        serviceName={service.name}
+                        servicePrice={service.price}
+                        serviceDuration={parseInt(service.duration.split('-')[0])}
+                        selectedDate={bookingDate}
+                        selectedSlot={bookingSlot}
+                        onSuccess={handleBookingSuccess}
+                        onCancel={closeBookingModal}
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Step 4: Éxito */}
+                  {bookingStep === 'success' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-12"
+                    >
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="w-12 h-12 text-green-600" />
+                      </div>
+                      <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                        ¡Reserva Exitosa!
+                      </h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        Tu reserva ha sido confirmada. Recibirás un email con los detalles y un recordatorio antes de tu cita.
+                      </p>
+                      <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        Redirigiendo...
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

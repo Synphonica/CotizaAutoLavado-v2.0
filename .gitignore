@@ -121,3 +121,10 @@ NUL
 CON
 PRN
 AUX
+# ===== DOCUMENTACIÓN PRIVADA =====
+# Documentación interna no pública
+docs/
+
+# ===== DOCUMENTACION PRIVADA =====
+# Documentacion interna no publica
+docs/

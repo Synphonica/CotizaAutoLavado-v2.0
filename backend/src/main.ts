@@ -35,10 +35,14 @@ async function bootstrap() {
 
   // Configurar CORS
   await app.register(cors, {
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:4000'],
+    origin: process.env.CORS_ORIGINS?.split(',') || [
+      'http://localhost:3000',  // Frontend Next.js
+      'http://localhost:4000',  // Backend API
+      'http://localhost:19006', // Expo mobile
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // Configurar Helmet para seguridad

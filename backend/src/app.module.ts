@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
+import { SupabaseModule } from './common/supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProvidersModule } from './providers/providers.module';
@@ -16,6 +17,7 @@ import { IaModule } from './ia/ia.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadModule } from './upload/upload.module';
 import { EmailModule } from './email/email.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -28,6 +30,9 @@ import { EmailModule } from './email/email.module';
 
     // Módulo de Prisma (global)
     PrismaModule,
+
+    // Módulo de Supabase (global)
+    SupabaseModule,
 
     // Módulo de autenticación
     AuthModule,
@@ -47,6 +52,7 @@ import { EmailModule } from './email/email.module';
     AnalyticsModule,
     UploadModule,
     EmailModule,
+    BookingsModule,
   ],
   controllers: [],
   providers: [],
