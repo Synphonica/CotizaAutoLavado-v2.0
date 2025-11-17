@@ -132,3 +132,55 @@ docs/
 # ===== SCRAPER PRIVADO =====
 # Scripts de scraping no públicos
 scraper/
+
+# ===== DOCUMENTACIÓN DE DESARROLLO INTERNA =====
+# Documentos de proceso interno
+CONSOLIDACION_ENV.md
+DEPLOYMENT.md
+DIA_*.md
+ERRORES_RESUELTOS.md
+GUIA_ENV.md
+INSTALACION.md
+PROYECTO_README.md
+QUICK_START.md
+RESUMEN_*.md
+SECURITY.md
+*_RESUMEN.md
+
+# ===== SCRIPTS DE UTILIDAD =====
+# Scripts de desarrollo local
+check-connection.sh
+verify-clerk.js
+verify-connectivity.ps1
+mobile-diagnostics.*
+docker-compose.dev.yml
+
+# ===== ARCHIVOS DE DATOS =====
+# Archivos grandes de datos
+docs.zip
+historias_de_usuario.json
+historias_de_usuario.md
+
+# ===== SCRIPTS DE IMPORTACIÓN =====
+# Scripts de importación de datos (backend)
+backend/add-services.mjs
+backend/check-*.mjs
+backend/cleanup-and-convert.mjs
+backend/create-services.mjs
+backend/import-*.mjs
+backend/list-all.mjs
+backend/recreate-services.mjs
+
+# ===== DOCUMENTACIÓN REDUNDANTE =====
+# READMEs adicionales del backend
+backend/RESUMEN_ERRORES.md
+backend/SOLUCION_RLS_WARNING.md
+
+# ===== DOCUMENTACIÓN REDUNDANTE FRONTEND =====
+# Documentación interna del frontend
+frontend/CAMBIOS_API_REAL.md
+frontend/RESUMEN_CAMBIOS.md
+
+# Configuraciones de desarrollo local
+docker-compose.yml
+scripts/check-secrets.*
