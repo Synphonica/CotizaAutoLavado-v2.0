@@ -35,6 +35,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         console.error('Error caught by boundary:', error, errorInfo);
+
+        // Log del error (en producción, enviar a servicio de logging como Sentry)
+        if (process.env.NODE_ENV === 'production') {
+            // TODO: Integrar con Sentry, LogRocket, etc.
+            // Sentry.captureException(error, { extra: errorInfo });
+
+            // Por ahora, log a consola con contexto
+            console.error('Production error:', {
+                message: error.message,
+                stack: error.stack,
+                componentStack: errorInfo.componentStack,
+                timestamp: new Date().toISOString(),
+                userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+                url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+            });
+        }
+
         this.setState({
             error,
             errorInfo,

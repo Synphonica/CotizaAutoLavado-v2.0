@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BarChart3, 
-  Calendar, 
-  Users, 
-  Star, 
-  Settings, 
+import ServiceModal from "@/components/ServiceModal";
+import {
+  BarChart3,
+  Calendar,
+  Users,
+  Star,
+  Settings,
   Plus,
   Edit,
   Trash2,
@@ -49,21 +50,25 @@ const mockServices = [
     price: 15000,
     originalPrice: 18750,
     discount: 20,
-    status: "active",
+    status: "active" as const,
     bookings: 45,
     rating: 4.8,
-    category: "Lavado Exterior"
+    category: "exterior",
+    description: "Lavado exterior completo con cera protectora y limpieza de llantas",
+    duration: 45
   },
   {
-    id: "2", 
+    id: "2",
     name: "Lavado Completo + Encerado",
     price: 25000,
     originalPrice: 30000,
     discount: 17,
-    status: "active",
+    status: "active" as const,
     bookings: 32,
     rating: 4.9,
-    category: "Lavado Completo"
+    category: "complete",
+    description: "Lavado completo interior y exterior con encerado premium",
+    duration: 90
   },
   {
     id: "3",
@@ -71,10 +76,12 @@ const mockServices = [
     price: 8000,
     originalPrice: 8000,
     discount: 0,
-    status: "inactive",
+    status: "inactive" as const,
     bookings: 28,
     rating: 4.5,
-    category: "Lavado Rápido"
+    category: "express",
+    description: "Lavado rápido exterior para cuando tienes poco tiempo",
+    duration: 20
   }
 ];
 
@@ -91,7 +98,7 @@ const mockBookings = [
   },
   {
     id: "2",
-    customerName: "Carlos Rodríguez", 
+    customerName: "Carlos Rodríguez",
     service: "Lavado Completo + Encerado",
     date: "2024-01-25",
     time: "14:00",
@@ -123,9 +130,45 @@ const mockStats = {
 };
 
 export default function ProviderPage() {
-  const [services] = useState(mockServices);
+  const [services, setServices] = useState(mockServices);
   const [bookings] = useState(mockBookings);
   const [stats] = useState(mockStats);
+
+  // Modal states
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<typeof mockServices[0] | null>(null);
+
+  const handleCreateService = () => {
+    setSelectedService(null);
+    setIsServiceModalOpen(true);
+  };
+
+  const handleEditService = (service: typeof mockServices[0]) => {
+    setSelectedService(service);
+    setIsServiceModalOpen(true);
+  };
+
+  const handleSaveService = (service: any) => {
+    if (selectedService) {
+      // Editar servicio existente
+      setServices(prev => prev.map(s => s.id === selectedService.id ? { ...s, ...service } : s));
+    } else {
+      // Crear nuevo servicio
+      const newService = {
+        ...service,
+        id: String(services.length + 1),
+        bookings: 0,
+        rating: 0,
+      };
+      setServices(prev => [...prev, newService]);
+    }
+  };
+
+  const handleDeleteService = (serviceId: string) => {
+    if (confirm('¿Estás seguro de eliminar este servicio?')) {
+      setServices(prev => prev.filter(s => s.id !== serviceId));
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -221,66 +264,66 @@ export default function ProviderPage() {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+          <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-[#0F9D58]">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Ingresos Totales</p>
-                  <p className="text-2xl font-bold text-green-600">${stats.totalRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold" style={{ color: '#0F9D58' }}>${stats.totalRevenue.toLocaleString()}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-green-600">+{stats.monthlyGrowth}%</span>
+                    <TrendingUp className="h-4 w-4" style={{ color: '#0F9D58' }} />
+                    <span className="text-sm" style={{ color: '#0F9D58' }}>+{stats.monthlyGrowth}%</span>
                   </div>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
+                <DollarSign className="h-8 w-8" style={{ color: '#0F9D58' }} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-gradient-to-r from-cyan-50 to-cyan-100" style={{ borderColor: '#2B8EAD' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Reservas Totales</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.totalBookings}</p>
+                  <p className="text-2xl font-bold" style={{ color: '#2B8EAD' }}>{stats.totalBookings}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm text-blue-600">+{stats.bookingsGrowth}%</span>
+                    <TrendingUp className="h-4 w-4" style={{ color: '#2B8EAD' }} />
+                    <span className="text-sm" style={{ color: '#2B8EAD' }}>+{stats.bookingsGrowth}%</span>
                   </div>
                 </div>
-                <Calendar className="h-8 w-8 text-blue-600" />
+                <Calendar className="h-8 w-8" style={{ color: '#2B8EAD' }} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+          <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100" style={{ borderColor: '#FFD166' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Rating Promedio</p>
-                  <p className="text-2xl font-bold text-purple-600">{stats.averageRating}</p>
+                  <p className="text-2xl font-bold" style={{ color: '#D4A029' }}>{stats.averageRating}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-purple-600">+{stats.ratingGrowth}</span>
+                    <TrendingUp className="h-4 w-4" style={{ color: '#D4A029' }} />
+                    <span className="text-sm" style={{ color: '#D4A029' }}>+{stats.ratingGrowth}</span>
                   </div>
                 </div>
-                <Star className="h-8 w-8 text-purple-600" />
+                <Star className="h-8 w-8" style={{ color: '#FFD166' }} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+          <Card className="bg-gradient-to-r from-emerald-50 via-cyan-50 to-emerald-100" style={{ borderColor: '#0F9D58' }}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Tasa de Completado</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.completionRate}%</p>
+                  <p className="text-2xl font-bold" style={{ color: '#0F9D58' }}>{stats.completionRate}%</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm text-orange-600">+{stats.completionGrowth}%</span>
+                    <TrendingUp className="h-4 w-4" style={{ color: '#0F9D58' }} />
+                    <span className="text-sm" style={{ color: '#0F9D58' }}>+{stats.completionGrowth}%</span>
                   </div>
                 </div>
-                <CheckCircle className="h-8 w-8 text-orange-600" />
+                <CheckCircle className="h-8 w-8" style={{ color: '#0F9D58' }} />
               </div>
             </CardContent>
           </Card>
@@ -321,7 +364,7 @@ export default function ProviderPage() {
                       <BarChart3 className="h-5 w-5" />
                       Mis Servicios
                     </CardTitle>
-                    <Button className="flex items-center gap-2">
+                    <Button className="flex items-center gap-2" style={{ backgroundColor: '#FFD166', color: '#073642' }} onClick={handleCreateService}>
                       <Plus className="h-4 w-4" />
                       Agregar Servicio
                     </Button>
@@ -351,10 +394,10 @@ export default function ProviderPage() {
                                 <Button variant="ghost" size="sm">
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => handleEditService(service)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600">
+                                <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDeleteService(service.id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -366,7 +409,7 @@ export default function ProviderPage() {
                                   ${service.price.toLocaleString()}
                                 </span>
                                 {service.discount > 0 && (
-                                  <Badge variant="destructive" className="text-xs">
+                                  <Badge variant="destructive" className="text-xs" style={{ backgroundColor: '#FFD166', color: '#073642' }}>
                                     -{service.discount}%
                                   </Badge>
                                 )}
@@ -384,9 +427,10 @@ export default function ProviderPage() {
                               </div>
 
                               <div className="flex items-center justify-between">
-                                <Badge 
+                                <Badge
                                   variant={service.status === "active" ? "default" : "secondary"}
-                                  className={service.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                                  className={service.status === "active" ? "" : "bg-gray-100 text-gray-800"}
+                                  style={service.status === "active" ? { backgroundColor: '#0F9D58', color: 'white' } : {}}
                                 >
                                   {service.status === "active" ? "Activo" : "Inactivo"}
                                 </Badge>
@@ -424,8 +468,8 @@ export default function ProviderPage() {
                         className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Users className="h-6 w-6 text-blue-600" />
+                          <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <Users className="h-6 w-6" style={{ color: '#0F9D58' }} />
                           </div>
                           <div>
                             <h4 className="font-semibold">{booking.customerName}</h4>
@@ -442,9 +486,9 @@ export default function ProviderPage() {
                             <Badge className={getStatusColor(booking.status)}>
                               <div className="flex items-center gap-1">
                                 {getStatusIcon(booking.status)}
-                                {booking.status === "confirmed" ? "Confirmado" : 
-                                 booking.status === "pending" ? "Pendiente" :
-                                 booking.status === "completed" ? "Completado" : "Cancelado"}
+                                {booking.status === "confirmed" ? "Confirmado" :
+                                  booking.status === "pending" ? "Pendiente" :
+                                    booking.status === "completed" ? "Completado" : "Cancelado"}
                               </div>
                             </Badge>
                             <Button variant="outline" size="sm">
@@ -482,7 +526,7 @@ export default function ProviderPage() {
                       {services.slice(0, 3).map((service, index) => (
                         <div key={service.id} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
+                            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-sm font-bold" style={{ color: '#0F9D58' }}>
                               {index + 1}
                             </div>
                             <div>
@@ -533,7 +577,7 @@ export default function ProviderPage() {
                       <Input defaultValue={mockProviderData.address} />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <h4 className="font-semibold">Horarios de Atención</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -548,13 +592,21 @@ export default function ProviderPage() {
                     </div>
                   </div>
 
-                  <Button className="w-full">Guardar Cambios</Button>
+                  <Button className="w-full" style={{ backgroundColor: '#0F9D58', color: 'white' }}>Guardar Cambios</Button>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </motion.div>
       </div>
+
+      {/* Modal de Servicio */}
+      <ServiceModal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        onSave={handleSaveService}
+        service={selectedService}
+      />
     </div>
   );
 }

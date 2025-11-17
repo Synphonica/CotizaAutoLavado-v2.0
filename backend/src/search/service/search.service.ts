@@ -110,6 +110,10 @@ export class SearchService {
                     region: true,
                     phone: true,
                     email: true,
+                    website: true,
+                    instagram: true,
+                    facebook: true,
+                    twitter: true,
                     rating: true,
                     reviewCount: true,
                     status: true,
@@ -154,24 +158,53 @@ export class SearchService {
             case 'createdAt':
                 orderBy = { createdAt: sortOrder };
                 break;
+            case 'rating':
+                orderBy = { rating: sortOrder };
+                break;
             case 'relevance':
             default:
-                // Para relevancia, ordenamos por precio ascendente
-                orderBy = { price: 'asc' };
+                // Para relevancia, usar un ordenamiento semi-aleatorio para diversidad
+                orderBy = { id: sortOrder };
                 break;
         }
 
-        // Ejecutar búsqueda
-        const [services, total] = await Promise.all([
-            this.prisma.service.findMany({
-                where,
-                include,
-                orderBy,
-                skip,
-                take: limit
-            }),
-            this.prisma.service.count({ where })
-        ]);
+        // Ejecutar búsqueda con diversidad geográfica
+        let services: any[];
+        let total: number;
+
+        if (sortBy === 'relevance' && !city && !region) {
+            // Si es búsqueda por relevancia sin filtro de ubicación, diversificar resultados
+            // Obtener TODOS los servicios para poder diversificar correctamente
+            const [allServices, totalCount] = await Promise.all([
+                this.prisma.service.findMany({
+                    where,
+                    include,
+                    orderBy: { createdAt: 'desc' }
+                    // NO limitar aquí - queremos todos los servicios para diversificar
+                }),
+                this.prisma.service.count({ where })
+            ]);
+
+            console.log(`📊 Total services found: ${allServices.length}, diversifying for page ${page}...`);
+
+            // Diversificar servicios por ubicación
+            services = this.diversifyByLocation(allServices, limit, skip);
+            total = totalCount;
+
+            console.log(`✅ Diversified services: ${services.length} for page ${page}`);
+        } else {
+            // Búsqueda normal
+            [services, total] = await Promise.all([
+                this.prisma.service.findMany({
+                    where,
+                    include,
+                    orderBy,
+                    skip,
+                    take: limit
+                }),
+                this.prisma.service.count({ where })
+            ]);
+        }
 
         // Calcular distancias si se proporcionaron coordenadas
         let resultsWithDistance: any[] = services;
@@ -591,5 +624,274 @@ export class SearchService {
         }
 
         return result;
+    }
+
+    /**
+     * Obtener servicios similares para comparación
+     */
+    async getSimilarServices(serviceId: string, limit: number = 6): Promise<SearchResultDto[]> {
+        // Obtener el servicio original
+        const originalService = await this.prisma.service.findUnique({
+            where: { id: serviceId },
+            include: {
+                provider: true
+            }
+        });
+
+        if (!originalService) {
+            return [];
+        }
+
+        // Buscar servicios similares basados en:
+        // 1. Mismo tipo de servicio
+        // 2. Rango de precio similar (±30%)
+        // 3. Diferente proveedor (para comparar)
+        const minPrice = Number(originalService.price) * 0.7;
+        const maxPrice = Number(originalService.price) * 1.3;
+
+        const similarServices = await this.prisma.service.findMany({
+            where: {
+                id: { not: serviceId }, // Excluir el servicio actual
+                type: originalService.type, // Mismo tipo
+                status: ServiceStatus.ACTIVE,
+                isAvailable: true,
+                price: {
+                    gte: minPrice,
+                    lte: maxPrice
+                },
+                providerId: { not: originalService.providerId }, // Diferente proveedor
+                deletedAt: null
+            },
+            include: {
+                provider: {
+                    select: {
+                        id: true,
+                        businessName: true,
+                        businessType: true,
+                        address: true,
+                        city: true,
+                        region: true,
+                        phone: true,
+                        email: true,
+                        rating: true,
+                        reviewCount: true,
+                        status: true,
+                        latitude: true,
+                        longitude: true
+                    }
+                },
+                serviceImages: {
+                    select: {
+                        id: true,
+                        url: true,
+                        alt: true
+                    }
+                }
+            },
+            orderBy: [
+                { price: 'asc' } // Ordenar por precio
+            ],
+            take: limit
+        });
+
+        // Si hay coordenadas del proveedor original, calcular distancias
+        let servicesWithDistance = similarServices;
+        if (originalService.provider.latitude && originalService.provider.longitude) {
+            servicesWithDistance = similarServices.map(service => {
+                const serviceWithProvider = service as any;
+                if (serviceWithProvider.provider?.latitude && serviceWithProvider.provider?.longitude) {
+                    const distance = this.calculateDistance(
+                        originalService.provider.latitude!,
+                        originalService.provider.longitude!,
+                        serviceWithProvider.provider.latitude,
+                        serviceWithProvider.provider.longitude
+                    );
+                    return { ...service, distance };
+                }
+                return service;
+            });
+
+            // Ordenar por distancia si está disponible
+            servicesWithDistance.sort((a: any, b: any) => {
+                if (a.distance && b.distance) {
+                    return a.distance - b.distance;
+                }
+                return 0;
+            });
+        }
+
+        return servicesWithDistance.map(service => this.mapToSearchResult(service));
+    }
+
+    /**
+     * Diversificar resultados por ubicación para evitar agrupar servicios de la misma comuna
+     * Primero diversifica por región, luego por ciudad dentro de cada región
+     */
+    private diversifyByLocation(services: any[], limit: number, skip: number): any[] {
+        if (services.length === 0) {
+            console.log('⚠️ No services to diversify');
+            return [];
+        }
+
+        console.log(`🔄 Diversifying ${services.length} services...`);
+
+        // Agrupar por región y ciudad
+        const byRegionCity = new Map<string, Map<string, any[]>>();
+        const regionStats: Record<string, number> = {};
+
+        services.forEach(service => {
+            const region = service.provider?.region || 'Sin región';
+            const city = service.provider?.city || 'Sin ciudad';
+
+            // Estadísticas
+            regionStats[region] = (regionStats[region] || 0) + 1;
+
+            if (!byRegionCity.has(region)) {
+                byRegionCity.set(region, new Map());
+            }
+
+            const regionMap = byRegionCity.get(region)!;
+            if (!regionMap.has(city)) {
+                regionMap.set(city, []);
+            }
+
+            regionMap.get(city)!.push(service);
+        });
+
+        console.log('📍 Services by region:', regionStats);
+        console.log(`🗺️ Total regions: ${byRegionCity.size}, Total cities: ${Array.from(byRegionCity.values()).reduce((sum, cities) => sum + cities.size, 0)}`);
+
+        // Distribuir servicios alternando entre regiones y ciudades
+        const diversified: any[] = [];
+        const regions = Array.from(byRegionCity.keys());
+
+        // Shuffle regions para no favorecer siempre las mismas
+        for (let i = regions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [regions[i], regions[j]] = [regions[j], regions[i]];
+        }
+
+        let regionIndex = 0;
+        const cityIndexByRegion = new Map<string, number>();
+
+        // Inicializar índices de ciudades
+        regions.forEach(region => {
+            cityIndexByRegion.set(region, 0);
+        });
+
+        // Distribuir servicios - Round Robin entre regiones
+        let iterations = 0;
+        const maxIterations = services.length * 2; // Prevenir loops infinitos
+
+        while (diversified.length < services.length && regions.length > 0 && iterations < maxIterations) {
+            iterations++;
+            const region = regions[regionIndex % regions.length];
+            const citiesInRegion = byRegionCity.get(region)!;
+            const cityKeys = Array.from(citiesInRegion.keys());
+
+            if (cityKeys.length === 0) {
+                // Eliminar región si no tiene más ciudades
+                regions.splice(regionIndex % regions.length, 1);
+                if (regions.length === 0) break;
+                continue;
+            }
+
+            // Obtener ciudad de forma rotativa
+            const cityIdx = cityIndexByRegion.get(region)! % cityKeys.length;
+            const city = cityKeys[cityIdx];
+            const cityServices = citiesInRegion.get(city)!;
+
+            if (cityServices.length > 0) {
+                diversified.push(cityServices.shift()!);
+            }
+
+            // Actualizar o eliminar ciudad si está vacía
+            if (cityServices.length === 0) {
+                citiesInRegion.delete(city);
+            }
+
+            // Actualizar índice de ciudad para la región
+            cityIndexByRegion.set(region, cityIdx + 1);
+
+            regionIndex++;
+        }
+
+        console.log(`✅ Diversified ${diversified.length} services. Applying pagination: skip=${skip}, limit=${limit}`);
+
+        // Aplicar paginación
+        const paginatedResults = diversified.slice(skip, skip + limit);
+
+        console.log(`📄 Returning ${paginatedResults.length} services for current page`);
+
+        return paginatedResults;
+    }
+
+    /**
+     * Obtener todas las ubicaciones disponibles (regiones y ciudades)
+     */
+    async getAvailableLocations(): Promise<{
+        regions: string[];
+        cities: string[];
+        regionCityMap: Record<string, string[]>;
+    }> {
+        console.log('🔍 Loading all available locations...');
+
+        // Obtener proveedores que tienen servicios activos (sin filtrar por status VERIFIED)
+        const providers = await this.prisma.provider.findMany({
+            where: {
+                services: {
+                    some: {
+                        status: 'ACTIVE',
+                        isAvailable: true,
+                        deletedAt: null
+                    }
+                }
+            },
+            select: {
+                region: true,
+                city: true,
+                status: true
+            }
+        });
+
+        console.log(`📍 Found ${providers.length} providers with active services`);
+
+        const regionsSet = new Set<string>();
+        const citiesSet = new Set<string>();
+        const regionCityMap: Record<string, Set<string>> = {};
+
+        providers.forEach(provider => {
+            if (provider.region) {
+                regionsSet.add(provider.region);
+
+                if (!regionCityMap[provider.region]) {
+                    regionCityMap[provider.region] = new Set();
+                }
+
+                if (provider.city) {
+                    citiesSet.add(provider.city);
+                    regionCityMap[provider.region].add(provider.city);
+                }
+            }
+        });
+
+        // Convertir Sets a arrays y ordenar
+        const regions = Array.from(regionsSet).sort();
+        const cities = Array.from(citiesSet).sort();
+
+        // Convertir Sets en el mapa a arrays
+        const regionCityMapArray: Record<string, string[]> = {};
+        Object.keys(regionCityMap).forEach(region => {
+            regionCityMapArray[region] = Array.from(regionCityMap[region]).sort();
+        });
+
+        console.log(`✅ Loaded ${regions.length} regions and ${cities.length} cities`);
+        console.log('📊 Regions:', regions);
+
+        return {
+            regions,
+            cities,
+            regionCityMap: regionCityMapArray
+        };
     }
 }

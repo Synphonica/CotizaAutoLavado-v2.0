@@ -18,7 +18,8 @@ export class UploadService {
   private readonly logger = new Logger(UploadService.name);
 
   constructor(private readonly prisma: PrismaService) {
-    this.logger.warn('UploadService is deprecated. Please use SupabaseUploadService instead.');
+    // Warning silenciado - este servicio se mantiene solo para compatibilidad
+    // Use SupabaseUploadService para nuevas implementaciones
   }
 
   async uploadFile(file: Express.Multer.File, uploadData: UploadFileDto): Promise<UploadResponseDto> {

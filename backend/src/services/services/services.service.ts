@@ -109,6 +109,13 @@ export class ServicesService {
             businessType: true,
             city: true,
             region: true,
+            address: true,
+            phone: true,
+            email: true,
+            website: true,
+            instagram: true,
+            facebook: true,
+            twitter: true,
             rating: true,
             reviewCount: true
           }
@@ -214,6 +221,13 @@ export class ServicesService {
               businessType: true,
               city: true,
               region: true,
+              address: true,
+              phone: true,
+              email: true,
+              website: true,
+              instagram: true,
+              facebook: true,
+              twitter: true,
               rating: true,
               reviewCount: true
             }
@@ -269,6 +283,13 @@ export class ServicesService {
             businessType: true,
             city: true,
             region: true,
+            address: true,
+            phone: true,
+            email: true,
+            website: true,
+            instagram: true,
+            facebook: true,
+            twitter: true,
             rating: true,
             reviewCount: true
           }
@@ -326,6 +347,13 @@ export class ServicesService {
               businessType: true,
               city: true,
               region: true,
+              address: true,
+              phone: true,
+              email: true,
+              website: true,
+              instagram: true,
+              facebook: true,
+              twitter: true,
               rating: true,
               reviewCount: true
             }

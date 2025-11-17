@@ -1,31 +1,68 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Injectable, ExecutionContext, UnauthorizedException, CanActivate } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Public } from '../decorators/public.decorator';
+import { verifyToken } from '@clerk/backend';
 
+export interface ClerkUser {
+    clerkId: string;
+    email: string;
+    name?: string;
+    avatar?: string;
+    emailVerified?: boolean;
+}
+
+/**
+ * Guard to verify Clerk JWT tokens with Supabase template
+ */
 @Injectable()
-export class ClerkAuthGuard extends AuthGuard('clerk') {
-  constructor(private reflector: Reflector) {
-    super();
-  }
+export class ClerkAuthGuard implements CanActivate {
+    constructor(private reflector: Reflector) { }
 
-  canActivate(context: ExecutionContext) {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(Public, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        // Check if route is public
+        const isPublic = this.reflector.getAllAndOverride<boolean>(Public, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
 
-    if (isPublic) {
-      return true;
+        if (isPublic) {
+            return true;
+        }
+
+        const request = context.switchToHttp().getRequest();
+        const token = this.extractTokenFromHeader(request);
+
+        if (!token) {
+            throw new UnauthorizedException('No se proporcionó token de autenticación');
+        }
+
+        try {
+            // Verify Clerk token with required issuer
+            const payload = await verifyToken(token, {
+                secretKey: process.env.CLERK_SECRET_KEY,
+                issuer: (iss) => iss.startsWith('https://') && iss.includes('clerk'),
+            }) as any;
+
+            // Extract user data from token claims
+            const user: ClerkUser = {
+                clerkId: (payload.user_metadata?.clerk_id || payload.sub) as string,
+                email: payload.email as string,
+                name: payload.user_metadata?.name as string | undefined,
+                avatar: payload.user_metadata?.avatar as string | undefined,
+                emailVerified: payload.email_verified as boolean | undefined,
+            };
+
+            // Attach user to request
+            request.user = user;
+
+            return true;
+        } catch (error) {
+            throw new UnauthorizedException('Token de Clerk inválido o expirado');
+        }
     }
 
-    return super.canActivate(context);
-  }
-
-  handleRequest(err: any, user: any, info: any) {
-    if (err || !user) {
-      throw err || new UnauthorizedException('Token de Clerk inválido');
+    private extractTokenFromHeader(request: any): string | undefined {
+        const [type, token] = request.headers.authorization?.split(' ') ?? [];
+        return type === 'Bearer' ? token : undefined;
     }
-    return user;
-  }
 }

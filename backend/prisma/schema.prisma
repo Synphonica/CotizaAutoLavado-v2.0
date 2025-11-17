@@ -31,6 +31,7 @@ model User {
   providerProfile  Provider?
   reviews          Review[]
   searchHistory    SearchHistory[]
+  priceAlerts      PriceAlert[]
 
   @@index([defaultLatitude, defaultLongitude], map: "user_location_idx")
   @@index([role], map: "user_role_idx")
@@ -48,6 +49,9 @@ model Provider {
   phone             String
   email             String
   website           String?
+  instagram         String?
+  facebook          String?
+  twitter           String?
   address           String
   latitude          Float
   longitude         Float
@@ -112,6 +116,8 @@ model Service {
   notifications       Notification[]
   reviews             Review[]
   serviceImages       ServiceImage[]
+  priceAlerts         PriceAlert[]
+  priceHistory        PriceHistory[]
   provider            Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId], map: "service_provider_idx")
@@ -345,6 +351,43 @@ model BlockedDate {
   @@map("blocked_dates")
 }
 
+model PriceAlert {
+  id             String    @id @default(cuid())
+  userId         String
+  serviceId      String
+  targetPrice    Decimal?  @db.Decimal(10, 2) // Precio objetivo (opcional, si null = cualquier bajada)
+  percentageOff  Int? // Porcentaje de descuento mínimo (opcional)
+  isActive       Boolean   @default(true)
+  notifyEmail    Boolean   @default(true)
+  notifyInApp    Boolean   @default(true)
+  lastNotifiedAt DateTime? // Última vez que se envió notificación
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  triggeredCount Int       @default(0) // Cuántas veces se ha disparado
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service        Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceId]) // Un usuario solo puede tener una alerta por servicio
+  @@index([userId], map: "price_alert_user_idx")
+  @@index([serviceId], map: "price_alert_service_idx")
+  @@index([isActive], map: "price_alert_active_idx")
+  @@map("price_alerts")
+}
+
+model PriceHistory {
+  id         String   @id @default(cuid())
+  serviceId  String
+  price      Decimal  @db.Decimal(10, 2)
+  oldPrice   Decimal? @db.Decimal(10, 2) // Precio anterior (para detectar cambios)
+  changeType String? // 'increase', 'decrease', 'no_change'
+  recordedAt DateTime @default(now())
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId], map: "price_history_service_idx")
+  @@index([recordedAt], map: "price_history_date_idx")
+  @@map("price_history")
+}
+
 enum UserRole {
   CUSTOMER
   PROVIDER
@@ -393,6 +436,7 @@ enum ReviewStatus {
 
 enum NotificationType {
   PRICE_DROP
+  PRICE_ALERT
   NEW_OFFER
   NEW_PROVIDER
   SYSTEM_UPDATE

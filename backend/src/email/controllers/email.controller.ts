@@ -59,20 +59,17 @@ export class EmailController {
   @ApiOkResponse({ description: 'Alerta de precio enviada', type: EmailResponseDto as any })
   async sendPriceAlertEmail(
     @Body() body: {
-      userEmail: string;
+      to: string;
       userName: string;
-      serviceData: any;
-      providerData: any;
-      userId?: string;
+      serviceName: string;
+      providerName: string;
+      currentPrice: number;
+      oldPrice: number;
+      discountPercent: number;
+      serviceUrl: string;
     }
   ): Promise<EmailResponseDto> {
-    return this.emailService.sendPriceAlertEmail(
-      body.userEmail,
-      body.userName,
-      body.serviceData,
-      body.providerData,
-      body.userId
-    );
+    return this.emailService.sendPriceAlertEmail(body);
   }
 
   @Post('weekly-digest')

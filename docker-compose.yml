@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # ===================================
+  # PostgreSQL Database
+  # ===================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: alto-carwash-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-altocarwash}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-altocarwash}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/prisma/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-altocarwash}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alto-carwash-network
+
+  # ===================================
+  # Backend (NestJS)
+  # ===================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: alto-carwash-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-altocarwash}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-altocarwash}?schema=public
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+
+      # Application
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+
+      # Rate Limiting
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+
+      # External APIs (pass through)
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+
+      # Enable Swagger in development
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
+
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - alto-carwash-network
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===================================
+  # Frontend (Next.js)
+  # ===================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    container_name: alto-carwash-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:4000/api}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - alto-carwash-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===================================
+  # Redis (Optional - for caching)
+  # ===================================
+  redis:
+    image: redis:7-alpine
+    container_name: alto-carwash-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - alto-carwash-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - with-cache
+
+# ===================================
+# Networks
+# ===================================
+networks:
+  alto-carwash-network:
+    driver: bridge
+
+# ===================================
+# Volumes
+# ===================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

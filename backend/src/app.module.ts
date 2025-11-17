@@ -18,6 +18,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadModule } from './upload/upload.module';
 import { EmailModule } from './email/email.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { PriceAlertsModule } from './price-alerts/price-alerts.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -27,6 +29,9 @@ import { BookingsModule } from './bookings/bookings.module';
       envFilePath: ['.env.local', '.env'],
       cache: true,
     }),
+
+    // Módulo de Schedule (para cron jobs)
+    ScheduleModule.forRoot(),
 
     // Módulo de Prisma (global)
     PrismaModule,
@@ -53,6 +58,7 @@ import { BookingsModule } from './bookings/bookings.module';
     UploadModule,
     EmailModule,
     BookingsModule,
+    PriceAlertsModule,
   ],
   controllers: [],
   providers: [],

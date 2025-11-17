@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Removido 'output: standalone' para evitar problemas con hostname
+  // Enable standalone output for Docker builds
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
+
   eslint: {
     // Ignorar errores de ESLint durante el build de producción
     ignoreDuringBuilds: true,

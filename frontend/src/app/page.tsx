@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -8,317 +8,216 @@ import {
   Search, Shield, CheckCircle, Clock,
   MapPin, Star, GitCompare,
   DollarSign, Sparkles, Calculator, Phone,
-  ChevronDown, ArrowRight
+  ChevronDown, ArrowRight, Droplets, Zap, Award
 } from "lucide-react";
+import Image from "next/image";
+import { ModernNavbar } from "@/components/Navbar";
 
-export default function NetplanStyleHome() {
+export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section - Netplan Style */}
-      <section className="relative bg-white pt-20 pb-32 overflow-hidden">
-        {/* Subtle Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-white"></div>
+    <>
+      <ModernNavbar />
+      <div className="min-h-screen bg-white dark:bg-gray-900 lg:ml-72 sidebar-collapsed:lg:ml-20 transition-all duration-300">
+        {/* Hero Section - Energetic Style */}
+        <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+          {/* Gradient Glow Background */}
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-[#0F9D58]/20 to-[#2B8EAD]/20 rounded-full blur-[120px]"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFD166]/15 to-[#0F9D58]/15 rounded-full blur-[120px]"></div>
+          </div>
 
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            {/* Main Headline - Netplan Style */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-16"
-            >
-              <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-                Compara Precios.
-                <br />
-                <span className="text-blue-600">Ahorra Dinero.</span>
-              </h1>
+          <div className="relative z-10 container mx-auto px-4 py-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Left: Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                {/* Logo/Brand */}
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#0F9D58] to-[#2B8EAD] rounded-2xl flex items-center justify-center shadow-lg">
+                    <Droplets className="h-7 w-7 text-white" />
+                  </div>
+                  <span className="text-2xl font-bold text-[#073642] dark:text-white tracking-wider">ALTO CARWASH</span>
+                </div>
 
-              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-                La forma más simple de <strong>comparar precios</strong> de lavado de autos en Chile.
-                Encuentra las mejores ofertas cerca de ti — en segundos.
-              </p>
+                {/* Main Headline */}
+                <h1 className="text-5xl md:text-7xl font-black text-[#073642] dark:text-white mb-6 leading-tight">
+                  Encuentra el
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0F9D58] to-[#2B8EAD]">
+                    mejor precio
+                  </span>
+                  <br />
+                  para tu auto
+                </h1>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <p className="text-xl md:text-2xl text-[#073642]/80 dark:text-gray-300 mb-12 leading-relaxed">
+                  Compara cientos de autolavados cerca de ti
+                  y ahorra hasta <strong className="text-[#0F9D58]">$5,000</strong> en cada servicio
+                </p>
+
+                {/* CTA Button */}
                 <Button
                   size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  className="bg-[#FFD166] hover:bg-[#FFD166]/90 text-[#073642] px-16 py-8 text-2xl font-bold rounded-full shadow-2xl shadow-[#FFD166]/50 hover:scale-105 transition-all duration-300"
                   asChild
                 >
                   <Link href="/results">
-                    Comenzar Ahora
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    COMPARAR AHORA
                   </Link>
                 </Button>
+              </motion.div>
 
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-10 py-6 text-lg font-semibold rounded-xl"
-                  asChild
-                >
-                  <Link href="#how-it-works">
-                    Ver Cómo Funciona
-                  </Link>
-                </Button>
-              </div>
+              {/* Right: Phone Mockup with Glow */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative lg:flex hidden justify-center items-center"
+              >
+                <div className="relative max-w-sm w-full">
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-8 bg-gradient-to-br from-[#0F9D58]/30 via-[#2B8EAD]/30 to-[#FFD166]/30 rounded-[4rem] blur-3xl"></div>
 
-              <p className="text-sm text-gray-500">
-                ✨ 15,234 cotizaciones realizadas este mes
-              </p>
-            </motion.div>
-
-            {/* Hero Image/Dashboard Preview */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl shadow-2xl overflow-hidden border border-gray-300">
-                <div className="p-8">
-                  {/* Mock Dashboard */}
-                  <div className="bg-white rounded-2xl shadow-lg p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">Comparación: Lavado Premium</h3>
-                        <p className="text-sm text-gray-500">3 proveedores cerca de ti</p>
-                      </div>
-                      <Badge className="bg-green-500 text-white px-4 py-2">
-                        Ahorro: $4,500
-                      </Badge>
-                    </div>
-
-                    {/* Mock Results */}
-                    <div className="space-y-3">
-                      {[
-                        { name: "AutoClean Pro", price: "15,990", rating: 4.9, badge: "MEJOR PRECIO" },
-                        { name: "Premium Wash", price: "19,990", rating: 4.7, badge: null },
-                        { name: "Elite Detail", price: "20,490", rating: 4.8, badge: null },
-                      ].map((provider, i) => (
-                        <div key={i} className={`p-4 rounded-xl border-2 ${i === 0 ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'}`}>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-gray-900">{provider.name}</span>
-                                {provider.badge && (
-                                  <Badge className="bg-green-600 text-white text-xs">{provider.badge}</Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm text-gray-600">{provider.rating}</span>
-                                <span className="text-xs text-gray-400">• 1.2 km</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-gray-900">${provider.price}</div>
-                              <Button size="sm" className={i === 0 ? "bg-green-600 hover:bg-green-700" : ""}>
-                                Contactar
-                              </Button>
-                            </div>
+                  {/* Phone Frame */}
+                  <div className="relative bg-[#1F2937] rounded-[3.5rem] p-4 shadow-2xl border-[10px] border-[#1F2937]">
+                    <div className="bg-white rounded-[2.8rem] overflow-hidden" style={{ aspectRatio: '9/19.5' }}>
+                      {/* Mock App Screen */}
+                      <div className="relative h-full bg-gradient-to-br from-emerald-50 to-cyan-50">
+                        {/* Status Bar */}
+                        <div className="px-6 pt-3 pb-2 flex justify-between items-center text-xs text-gray-600">
+                          <span className="font-semibold">9:41</span>
+                          <div className="flex gap-1 items-center">
+                            <div className="w-4 h-3 border border-gray-600 rounded-sm"></div>
                           </div>
                         </div>
-                      ))}
+
+                        {/* Content */}
+                        <div className="px-6 py-4 space-y-3">
+                          <div className="text-center mb-4">
+                            <h3 className="text-xl font-black text-[#073642]">Resultados cerca de ti</h3>
+                            <p className="text-xs text-[#073642]/60 mt-1">3 autolavados encontrados</p>
+                          </div>
+
+                          {/* Mock Service Cards */}
+                          {[
+                            { name: "AutoLavado Pro", price: 17000, rating: "4.9", distance: "1.2 km", best: true },
+                            { name: "Lavado Express", price: 19000, rating: "4.8", distance: "1.5 km", best: false },
+                            { name: "Clean Car Plus", price: 21000, rating: "4.7", distance: "2.1 km", best: false }
+                          ].map((item, i) => (
+                            <div
+                              key={i}
+                              className={`bg-white rounded-2xl p-4 shadow-md border-2 transition-all ${item.best ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-100'
+                                }`}
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="flex-1">
+                                  <div className="font-bold text-[#073642] text-sm mb-1">{item.name}</div>
+                                  <div className="flex items-center gap-1 text-xs text-[#073642]/60">
+                                    <Star className="h-3 w-3 fill-[#FFD166] text-[#FFD166]" />
+                                    <span>{item.rating}</span>
+                                    <span>•</span>
+                                    <MapPin className="h-3 w-3" />
+                                    <span>{item.distance}</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-xl font-black text-green-600">${item.price.toLocaleString()}</div>
+                                  {item.best && (
+                                    <Badge className="bg-green-500 text-white text-[10px] px-2 py-0.5 mt-1">
+                                      MEJOR PRECIO
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Notch */}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 w-28 h-7 bg-[#1F2937] rounded-full"></div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section - Light with Image */}
+        <section className="relative py-32 overflow-hidden bg-white dark:bg-gray-900">
+          {/* Background Image Overlay */}
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=1920')] bg-cover bg-center opacity-10 dark:opacity-5"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-gray-900 dark:via-transparent dark:to-gray-900"></div>
+
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-5xl md:text-7xl font-black mb-8">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0F9D58] to-[#2B8EAD]">
+                  Acerca de
+                  <br />
+                  Alto Carwash
+                </span>
+              </h2>
+
+              <p className="text-xl md:text-2xl text-[#073642]/80 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                La primera plataforma de Chile que te permite <strong className="text-[#0F9D58]">comparar precios</strong> de
+                autolavados en tiempo real. Encuentra el mejor servicio cerca de ti, con precios transparentes,
+                reseñas verificadas y ahorro garantizado. Todo en <strong className="text-[#2B8EAD]">menos de 30 segundos</strong>.
+              </p>
             </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works Section - Numbered Steps like Netplan */}
-      <section id="how-it-works" className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Comienza en 30 segundos
+        {/* Key Features - Circles with Icons */}
+        <section className="py-32 bg-gradient-to-b from-orange-50 to-yellow-50 dark:from-gray-800 dark:to-gray-900">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-20"
+            >
+              <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B35] to-[#F9C74F] mb-4">
+                Características Clave
               </h2>
-              <p className="text-xl text-gray-600">
-                Sin registro. Sin complicaciones. Solo resultados inmediatos.
-              </p>
-            </div>
+            </motion.div>
 
-            {/* Steps Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {[
-                {
-                  number: "1",
-                  title: "Ingresa tu Ubicación",
-                  description: "Literalmente toma 10 segundos ingresar tu dirección o comuna.",
-                  icon: MapPin
-                },
-                {
-                  number: "2",
-                  title: "Elige tu Servicio",
-                  description: "Selecciona el tipo de lavado: básico, premium, detailing, encerado y más.",
-                  icon: Search
-                },
-                {
-                  number: "3",
-                  title: "Compara Precios",
-                  description: "Ve múltiples cotizaciones con precios, reseñas y distancias.",
-                  icon: GitCompare
-                },
-                {
-                  number: "4",
-                  title: "Contacta y Ahorra",
-                  description: "Elige el mejor precio y contacta directamente al proveedor.",
-                  icon: Phone
-                }
-              ].map((step, index) => (
-                <motion.div
-                  key={step.number}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="relative"
-                >
-                  <div className="flex gap-6">
-                    {/* Number Badge */}
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
-                        {step.number}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div>
-                      <div className="flex items-center gap-3 mb-3">
-                        <step.icon className="h-6 w-6 text-blue-600" />
-                        <h3 className="text-2xl font-bold text-gray-900">
-                          {step.title}
-                        </h3>
-                      </div>
-                      <p className="text-lg text-gray-600 leading-relaxed">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pain Points Section - Netplan Style */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                ¿Cansado de pagar de más?
-              </h2>
-              <p className="text-xl text-gray-600">
-                Si estás buscando precios en Google, llamando proveedores uno por uno,
-                o simplemente yendo al lugar más cercano — hay una forma mejor.
-              </p>
-            </div>
-
-            {/* Pain Points Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              {[
-                {
-                  icon: "❌",
-                  title: "Llamar 5 lugares diferentes para comparar",
-                  color: "bg-red-50"
-                },
-                {
-                  icon: "❌",
-                  title: "No saber si estás pagando un precio justo",
-                  color: "bg-red-50"
-                },
-                {
-                  icon: "❌",
-                  title: "Perder tiempo buscando opciones manualmente",
-                  color: "bg-red-50"
-                }
-              ].map((pain, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className={`${pain.color} rounded-2xl p-6 text-center border-2 border-red-100`}
-                >
-                  <div className="text-4xl mb-4">{pain.icon}</div>
-                  <p className="text-gray-700 font-medium leading-relaxed">
-                    {pain.title}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Solution */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-blue-200">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    Alto Carwash hace el trabajo por ti
-                  </h3>
-                  <p className="text-lg text-gray-600 leading-relaxed">
-                    Obtienes múltiples cotizaciones en un solo lugar, con precios reales,
-                    reseñas verificadas y la ubicación de cada proveedor. Todo en menos de 30 segundos.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Different Section */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                ¿Por qué Alto Carwash es diferente?
-              </h2>
-              <p className="text-xl text-gray-600">
-                No somos un directorio más. Somos una plataforma de comparación
-                que te ahorra tiempo y dinero real.
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
               {[
                 {
                   icon: Calculator,
                   title: "Comparación Instantánea",
-                  description: "Ve precios de múltiples proveedores en segundos. Sin tener que llamar a nadie.",
-                  color: "bg-blue-50 text-blue-600"
+                  description: "Ve precios de múltiples autolavados en segundos. Sin llamadas, sin esperas.",
+                  gradient: "from-[#0F9D58] to-[#2B8EAD]"
                 },
                 {
                   icon: Shield,
                   title: "Proveedores Verificados",
-                  description: "Todos los proveedores están verificados con reseñas reales de usuarios.",
-                  color: "bg-green-50 text-green-600"
+                  description: "Todos los autolavados están verificados con reseñas reales y calificaciones auténticas.",
+                  gradient: "from-[#2B8EAD] to-[#0F9D58]"
                 },
                 {
-                  icon: DollarSign,
-                  title: "Precios Transparentes",
-                  description: "Sin tarifas ocultas. Los precios que ves son los precios que pagas.",
-                  color: "bg-amber-50 text-amber-600"
-                },
-                {
-                  icon: MapPin,
-                  title: "Ubicación Precisa",
-                  description: "Encuentra proveedores cerca de ti con distancia exacta y mapa interactivo.",
-                  color: "bg-purple-50 text-purple-600"
+                  icon: Zap,
+                  title: "Ahorro Garantizado",
+                  description: "Ahorra hasta $5,000 por servicio comparando precios en tiempo real.",
+                  gradient: "from-[#FFD166] to-[#0F9D58]"
                 }
               ].map((feature, index) => (
                 <motion.div
@@ -327,233 +226,231 @@ export default function NetplanStyleHome() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white rounded-2xl p-8 border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all"
+                  className="text-center group"
                 >
-                  <div className={`w-14 h-14 ${feature.color} rounded-xl flex items-center justify-center mb-6`}>
-                    <feature.icon className="h-7 w-7" />
+                  {/* Circle Icon */}
+                  <div className="relative inline-block mb-8">
+                    <div className={`w-48 h-48 bg-gradient-to-br ${feature.gradient} rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300`}>
+                      <feature.icon className="h-24 w-24 text-white" strokeWidth={1.5} />
+                    </div>
+                    {/* Glow */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-full blur-2xl opacity-50 group-hover:opacity-70 transition-opacity`}></div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
+
+                  {/* Content Box */}
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 hover:shadow-xl transition-all duration-300">
+                    <h3 className="text-2xl font-bold text-[#073642] dark:text-white mb-4">{feature.title}</h3>
+                    <p className="text-[#073642]/70 dark:text-gray-300 leading-relaxed">{feature.description}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Testimonials - Netplan Style */}
-      <section className="py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Lo que dicen nuestros usuarios
+        {/* How It Works - Full Width Image Background */}
+        <section className="relative py-32 overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=1920')] bg-cover bg-center"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0F9D58]/95 to-[#2B8EAD]/95"></div>
+
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-5xl md:text-7xl font-black mb-8">
+                <span className="text-white">
+                  Cómo Funciona
+                </span>
               </h2>
-              <p className="text-xl text-gray-600">
-                Alto Carwash fue creado para resolver problemas reales.
-                Aquí hay testimonios de usuarios felices.
-              </p>
-            </div>
 
-            {/* Testimonials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-16 leading-relaxed">
+                En 3 pasos simples encontrarás el mejor precio para el lavado de tu auto.
+                Sin complicaciones, sin pérdida de tiempo. Solo resultados reales.
+              </p>
+
+              <Button
+                size="lg"
+                className="bg-[#FFD166] hover:bg-[#FFD166]/90 text-[#073642] px-16 py-8 text-2xl font-bold rounded-full shadow-2xl shadow-[#FFD166]/50 hover:scale-105 transition-all duration-300"
+                asChild
+              >
+                <Link href="/results">
+                  EMPEZAR AHORA
+                </Link>
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Benefits - Split with Image */}
+        <section className="relative py-32 overflow-hidden bg-white dark:bg-gray-900">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Left: Image */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <div className="relative rounded-3xl overflow-hidden">
+                  <div className="aspect-square bg-gradient-to-br from-orange-100 to-yellow-100"></div>
+                  {/* Placeholder for car wash image */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Sparkles className="h-32 w-32 text-[#0F9D58]/50" />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Right: Content Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                <div className="bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-700 border-2 border-[#0F9D58]/20 dark:border-[#0F9D58]/40 rounded-3xl p-12 shadow-2xl">
+                  <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0F9D58] to-[#2B8EAD] mb-8">
+                    Ahorra Tiempo
+                    y Dinero
+                  </h2>
+
+                  <p className="text-xl text-[#073642] dark:text-gray-200 mb-8 leading-relaxed">
+                    Deja de perder tiempo llamando a diferentes autolavados o buscando en Google.
+                    Con Alto Carwash obtienes todas las opciones en un solo lugar, con precios actualizados
+                    y la garantía de encontrar la mejor oferta.
+                  </p>
+
+                  <Button
+                    size="lg"
+                    className="bg-[#FFD166] hover:bg-[#FFD166]/90 text-[#073642] px-12 py-6 text-xl font-bold rounded-full shadow-lg hover:scale-105 transition-all duration-300"
+                    asChild
+                  >
+                    <Link href="/results">
+                      VER OPCIONES
+                    </Link>
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Reviews - Light Cards */}
+        <section className="py-32 bg-gradient-to-b from-orange-50 to-yellow-50 dark:from-gray-800 dark:to-gray-900">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-20"
+            >
+              <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B35] to-[#F9C74F] mb-4">
+                Opiniones
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {[
                 {
-                  quote: "Esto es exactamente lo que necesitaba. Dejé de perder tiempo llamando y nunca más volví atrás.",
-                  author: "Carlos M.",
-                  source: "Via Email",
-                  avatar: "CM"
+                  quote: "Ahorré $4,500 en mi último lavado premium. La plataforma es increíblemente fácil de usar.",
+                  author: "Carlos Muñoz",
+                  role: "Usuario Verificado"
                 },
                 {
-                  quote: "La app perfecta para cualquiera que quiera comparar precios sin estar rogando por cotizaciones.",
-                  author: "María G.",
-                  source: "Via Instagram",
-                  avatar: "MG"
+                  quote: "Ya no pierdo tiempo llamando. Encuentro el mejor precio en segundos y listo.",
+                  author: "María González",
+                  role: "Cliente Frecuente"
                 },
                 {
-                  quote: "Solía olvidarme de pedir precios por semanas. Ahora obtengo todo en un solo lugar.",
-                  author: "Roberto S.",
-                  source: "Via Facebook",
-                  avatar: "RS"
-                },
-                {
-                  quote: "Ahorré $4,500 en mi último lavado premium. Los insights son brillantes.",
-                  author: "Patricia L.",
-                  source: "Via Email",
-                  avatar: "PL"
+                  quote: "Transparencia total en precios. Sin sorpresas ni cargos ocultos. Excelente servicio.",
+                  author: "Roberto Silva",
+                  role: "Nuevo Usuario"
                 }
-              ].map((testimonial, index) => (
+              ].map((review, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-white rounded-2xl p-8 border-2 border-gray-100 shadow-sm"
                 >
-                  <div className="mb-6">
-                    <p className="text-gray-700 leading-relaxed text-lg">
-                      "{testimonial.quote}"
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 hover:shadow-xl transition-all duration-300 h-full">
+                    <p className="text-[#073642] dark:text-gray-200 text-lg mb-8 leading-relaxed">
+                      "{review.quote}"
                     </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{testimonial.author}</div>
-                      <div className="text-sm text-gray-500">{testimonial.source}</div>
+
+                    <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-[#0F9D58] font-bold text-lg">{review.author}</p>
+                      <p className="text-[#073642]/60 dark:text-gray-400">{review.role}</p>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ Section - Netplan Style */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Preguntas Frecuentes
-              </h2>
-              <p className="text-xl text-gray-600">
-                Bueno... llegaste hasta aquí pero aún necesitas más información?
-                Lee nuestro FAQ y decide si Alto Carwash es para ti.
-              </p>
-            </div>
-
-            {/* FAQ Items */}
-            <div className="space-y-4">
-              {[
-                {
-                  question: "¿Es realmente gratis?",
-                  answer: "Sí, completamente gratis para usuarios. Los proveedores pagan una pequeña comisión solo cuando consiguen un cliente a través de nuestra plataforma."
-                },
-                {
-                  question: "¿Los precios son reales?",
-                  answer: "Absolutamente. Trabajamos directamente con los proveedores para asegurar que los precios sean actuales y precisos. Si encuentras una discrepancia, repórtala y la corregimos de inmediato."
-                },
-                {
-                  question: "¿Cómo ganan dinero?",
-                  answer: "Cobramos una pequeña comisión a los proveedores cuando consiguen clientes. Los usuarios nunca pagan nada."
-                },
-                {
-                  question: "¿Necesito crear una cuenta?",
-                  answer: "No es necesario para comparar precios. Solo necesitas una cuenta si quieres guardar favoritos o ver tu historial de cotizaciones."
-                },
-                {
-                  question: "¿Puedo confiar en las reseñas?",
-                  answer: "Sí. Todas las reseñas son de usuarios verificados que han usado el servicio. No permitimos reseñas falsas."
-                },
-                {
-                  question: "¿Qué ciudades cubren?",
-                  answer: "Actualmente cubrimos 35 ciudades en Chile, principalmente en la Región Metropolitana, Valparaíso y Concepción. Estamos expandiéndonos constantemente."
-                }
-              ].map((faq, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  viewport={{ once: true }}
-                  className="border-2 border-gray-200 rounded-xl overflow-hidden"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="font-semibold text-gray-900 text-lg pr-4">
-                      {faq.question}
-                    </span>
-                    <ChevronDown
-                      className={`h-5 w-5 text-gray-500 flex-shrink-0 transition-transform ${openFaq === index ? 'transform rotate-180' : ''
-                        }`}
-                    />
-                  </button>
-                  {openFaq === index && (
-                    <div className="px-6 pb-5 pt-2">
-                      <p className="text-gray-600 leading-relaxed">
-                        {faq.answer}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
+        {/* Final CTA - Gradient Glow */}
+        <section className="relative py-32 overflow-hidden bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0F9D58]/10 via-[#2B8EAD]/10 to-[#FFD166]/10 dark:from-[#0F9D58]/20 dark:via-[#2B8EAD]/20 dark:to-[#FFD166]/20"></div>
+          <div className="absolute inset-0">
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-[#0F9D58]/20 to-[#2B8EAD]/20 rounded-full blur-[150px]"></div>
+            <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-gradient-to-br from-[#FFD166]/20 to-[#0F9D58]/20 rounded-full blur-[150px]"></div>
           </div>
-        </div>
-      </section>
 
-      {/* Final CTA - Netplan Style */}
-      <section className="py-24 bg-gradient-to-br from-blue-600 to-blue-700">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center text-white">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Crea tu cotización GRATIS
-            </h2>
-            <p className="text-xl text-blue-100 mb-10 leading-relaxed max-w-2xl mx-auto">
-              Comparar precios de lavado de autos no debería ser estresante o confuso.
-              Con Alto Carwash, es simple, rápido, y realmente satisfactorio.
-              Ya sea que estés buscando ahorrar, encontrar calidad, o simplemente
-              quieres sentirte más organizado — Alto Carwash es la herramienta para lograrlo.
-            </p>
-
-            <Button
-              size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100 px-12 py-6 text-xl font-bold rounded-xl shadow-2xl hover:shadow-3xl transition-all"
-              asChild
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
             >
-              <Link href="/results">
-                Comenzar Ahora
-                <ArrowRight className="ml-3 h-6 w-6" />
-              </Link>
-            </Button>
+              <h2 className="text-6xl md:text-8xl font-black text-[#073642] dark:text-white mb-8">
+                ¿Listo para ahorrar?
+              </h2>
 
-            <div className="mt-8 flex items-center justify-center gap-8 text-blue-200 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>Sin registro</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>100% Gratis</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>Resultados instantáneos</span>
-              </div>
-            </div>
+              <p className="text-2xl md:text-3xl text-[#073642]/80 dark:text-gray-300 mb-16 max-w-4xl mx-auto leading-relaxed">
+                Únete a miles de usuarios que ya están ahorrando dinero
+                en cada lavado de auto
+              </p>
 
-            {/* Mock Icons - Goodbye/Hello */}
-            <div className="mt-16 pt-16 border-t border-blue-500/30">
-              <div className="grid grid-cols-3 gap-8 max-w-xl mx-auto">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">👋</div>
-                  <div className="text-sm text-blue-200">Adiós llamadas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">👋</div>
-                  <div className="text-sm text-blue-200">Adiós búsquedas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">👋</div>
-                  <div className="text-sm text-blue-200">Adiós confusión</div>
-                </div>
+              <Button
+                size="lg"
+                className="bg-[#FFD166] hover:bg-[#FFD166]/90 text-[#073642] px-20 py-10 text-3xl font-black rounded-full shadow-2xl shadow-[#FFD166]/50 hover:scale-110 transition-all duration-300"
+                asChild
+              >
+                <Link href="/results">
+                  COMENZAR GRATIS
+                </Link>
+              </Button>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-4xl mx-auto">
+                {[
+                  { value: "15K+", label: "Usuarios" },
+                  { value: "200+", label: "Autolavados" },
+                  { value: "$5K", label: "Ahorro Promedio" },
+                  { value: "4.9★", label: "Calificación" }
+                ].map((stat, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0F9D58] to-[#2B8EAD] mb-2">
+                      {stat.value}
+                    </div>
+                    <div className="text-gray-300 text-sm uppercase tracking-wider dark:text-gray-400">{stat.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="mt-8 text-3xl">✨</div>
-              <div className="mt-2 text-xl font-semibold">Hola Alto Carwash</div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

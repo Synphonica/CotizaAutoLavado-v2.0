@@ -9,8 +9,7 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  HttpStatus,
-  ParseUUIDPipe
+  HttpStatus
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,6 +31,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { UserRole } from '@prisma/client';
 
 @ApiTags('services')
@@ -127,7 +127,7 @@ export class ServicesController {
   @ApiQuery({ name: 'sortBy', required: false, description: 'Campo para ordenar' })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   async findByProvider(
-    @Param('providerId', ParseUUIDPipe) providerId: string,
+    @Param('providerId') providerId: string,
     @Query() queryDto: ServicesByProviderDto
   ): Promise<ServiceListResponseDto> {
     return this.servicesService.findByProvider(providerId, queryDto);
@@ -156,6 +156,7 @@ export class ServicesController {
    * Obtener un servicio por ID
    */
   @Get(':id')
+  @Public()
   @ApiOperation({
     summary: 'Obtener servicio por ID',
     description: 'Obtiene un servicio específico por su ID'
@@ -167,7 +168,7 @@ export class ServicesController {
   })
   @ApiResponse({ status: 404, description: 'Servicio no encontrado' })
   @ApiParam({ name: 'id', description: 'ID del servicio' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ServiceResponseDto> {
+  async findOne(@Param('id') id: string): Promise<ServiceResponseDto> {
     return this.servicesService.findOne(id);
   }
 
@@ -190,7 +191,7 @@ export class ServicesController {
   @ApiParam({ name: 'id', description: 'ID del servicio' })
   @ApiBody({ type: UpdateServiceDto })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateServiceDto: UpdateServiceDto,
     @CurrentUser() user: any
   ): Promise<ServiceResponseDto> {
@@ -219,7 +220,7 @@ export class ServicesController {
   @ApiParam({ name: 'id', description: 'ID del servicio' })
   @ApiBody({ type: UpdateServiceStatusDto })
   async updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateStatusDto: UpdateServiceStatusDto
   ): Promise<ServiceResponseDto> {
     return this.servicesService.updateStatus(id, updateStatusDto);
@@ -242,7 +243,7 @@ export class ServicesController {
   @ApiResponse({ status: 403, description: 'No tienes permisos para eliminar este servicio' })
   @ApiParam({ name: 'id', description: 'ID del servicio' })
   async remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @CurrentUser() user: any
   ): Promise<{ message: string }> {
     // Los administradores pueden eliminar cualquier servicio
@@ -268,7 +269,7 @@ export class ServicesController {
   @ApiResponse({ status: 404, description: 'Servicio no encontrado' })
   @ApiResponse({ status: 403, description: 'Acceso denegado - Solo administradores' })
   @ApiParam({ name: 'id', description: 'ID del servicio' })
-  async permanentDelete(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+  async permanentDelete(@Param('id') id: string): Promise<{ message: string }> {
     return this.servicesService.permanentDelete(id);
   }
 }

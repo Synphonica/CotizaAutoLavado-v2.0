@@ -157,14 +157,14 @@ export default function BookingForm({
 
     if (success) {
         return (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">¡Reserva Creada!</h3>
-                <p className="text-gray-600 mb-4">
+            <div className="bg-white rounded-lg border border-emerald-200 p-8 text-center">
+                <CheckCircle className="w-16 h-16 text-[#0F9D58] mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-[#073642] mb-2">¡Reserva Creada!</h3>
+                <p className="text-[#073642]/70 mb-4">
                     Tu reserva ha sido creada exitosamente. Recibirás un email de confirmación pronto.
                 </p>
-                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                <div className="inline-flex items-center gap-2 text-sm text-[#073642]/60">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0F9D58]" />
                     Redirigiendo...
                 </div>
             </div>
@@ -172,18 +172,18 @@ export default function BookingForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-            <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Completa tu Reserva</h3>
-                <p className="text-sm text-gray-600">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-emerald-200 p-6 space-y-6">
+            <div className="border-b border-emerald-200 pb-4">
+                <h3 className="text-xl font-bold text-[#073642] mb-2">Completa tu Reserva</h3>
+                <p className="text-sm text-[#073642]/70">
                     Confirma tus datos para completar la reserva
                 </p>
             </div>
 
             {/* Resumen de la reserva */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Resumen de la Reserva</h4>
-                <div className="space-y-1 text-sm text-blue-800">
+            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                <h4 className="font-semibold text-[#073642] mb-2">Resumen de la Reserva</h4>
+                <div className="space-y-1 text-sm text-[#073642]">
                     <p><span className="font-medium">Proveedor:</span> {providerName}</p>
                     <p><span className="font-medium">Servicio:</span> {serviceName}</p>
                     <p><span className="font-medium">Fecha:</span> {selectedDate.toLocaleDateString('es-CL')}</p>
@@ -193,7 +193,7 @@ export default function BookingForm({
                         {new Date(selectedSlot.endTime).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p><span className="font-medium">Duración:</span> {serviceDuration} minutos</p>
-                    <p className="text-lg font-bold mt-2">
+                    <p className="text-lg font-bold mt-2 text-[#0F9D58]">
                         <span className="font-medium">Total:</span> ${servicePrice.toLocaleString('es-CL')} CLP
                     </p>
                 </div>
@@ -211,13 +211,13 @@ export default function BookingForm({
 
             {/* Información Personal */}
             <div>
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <User className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-[#073642] mb-3 flex items-center gap-2">
+                    <User className="w-5 h-5 text-[#0F9D58]" />
                     Información Personal
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="customerName" className="block text-sm font-medium text-[#073642] mb-1">
                             Nombre Completo <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -226,7 +226,7 @@ export default function BookingForm({
                             name="customerName"
                             value={formData.customerName}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.customerName ? 'border-red-500' : 'border-gray-300'
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58] ${errors.customerName ? 'border-red-500' : 'border-emerald-200'
                                 }`}
                             placeholder="Juan Pérez"
                         />
@@ -236,18 +236,18 @@ export default function BookingForm({
                     </div>
 
                     <div>
-                        <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="customerPhone" className="block text-sm font-medium text-[#073642] mb-1">
                             Teléfono <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#073642]/40" />
                             <input
                                 type="tel"
                                 id="customerPhone"
                                 name="customerPhone"
                                 value={formData.customerPhone}
                                 onChange={handleChange}
-                                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.customerPhone ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58] ${errors.customerPhone ? 'border-red-500' : 'border-emerald-200'
                                     }`}
                                 placeholder="+56 9 1234 5678"
                             />
@@ -258,18 +258,18 @@ export default function BookingForm({
                     </div>
 
                     <div className="md:col-span-2">
-                        <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="customerEmail" className="block text-sm font-medium text-[#073642] mb-1">
                             Email <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#073642]/40" />
                             <input
                                 type="email"
                                 id="customerEmail"
                                 name="customerEmail"
                                 value={formData.customerEmail}
                                 onChange={handleChange}
-                                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.customerEmail ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58] ${errors.customerEmail ? 'border-red-500' : 'border-emerald-200'
                                     }`}
                                 placeholder="juan@example.com"
                             />
@@ -283,13 +283,13 @@ export default function BookingForm({
 
             {/* Información del Vehículo */}
             <div>
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Car className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-[#073642] mb-3 flex items-center gap-2">
+                    <Car className="w-5 h-5 text-[#0F9D58]" />
                     Información del Vehículo (Opcional)
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="vehicleBrand" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehicleBrand" className="block text-sm font-medium text-[#073642] mb-1">
                             Marca
                         </label>
                         <input
@@ -298,13 +298,13 @@ export default function BookingForm({
                             name="vehicleBrand"
                             value={formData.vehicleBrand}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                             placeholder="Toyota"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehicleModel" className="block text-sm font-medium text-[#073642] mb-1">
                             Modelo
                         </label>
                         <input
@@ -313,13 +313,13 @@ export default function BookingForm({
                             name="vehicleModel"
                             value={formData.vehicleModel}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                             placeholder="Corolla"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="vehicleYear" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehicleYear" className="block text-sm font-medium text-[#073642] mb-1">
                             Año
                         </label>
                         <input
@@ -328,7 +328,7 @@ export default function BookingForm({
                             name="vehicleYear"
                             value={formData.vehicleYear}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                             placeholder="2020"
                             min="1900"
                             max={new Date().getFullYear() + 1}
@@ -336,7 +336,7 @@ export default function BookingForm({
                     </div>
 
                     <div>
-                        <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehiclePlate" className="block text-sm font-medium text-[#073642] mb-1">
                             Patente
                         </label>
                         <input
@@ -345,14 +345,14 @@ export default function BookingForm({
                             name="vehiclePlate"
                             value={formData.vehiclePlate}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58] uppercase"
                             placeholder="AB1234"
                             maxLength={6}
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="vehicleColor" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehicleColor" className="block text-sm font-medium text-[#073642] mb-1">
                             Color
                         </label>
                         <input
@@ -361,13 +361,13 @@ export default function BookingForm({
                             name="vehicleColor"
                             value={formData.vehicleColor}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                             placeholder="Blanco"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="vehicleType" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="vehicleType" className="block text-sm font-medium text-[#073642] mb-1">
                             Tipo de Vehículo
                         </label>
                         <select
@@ -375,7 +375,7 @@ export default function BookingForm({
                             name="vehicleType"
                             value={formData.vehicleType}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                         >
                             <option value="sedan">Sedán</option>
                             <option value="suv">SUV</option>
@@ -390,8 +390,8 @@ export default function BookingForm({
 
             {/* Método de Pago */}
             <div>
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-[#073642] mb-3 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-[#0F9D58]" />
                     Método de Pago
                 </h4>
                 <select
@@ -399,7 +399,7 @@ export default function BookingForm({
                     name="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                 >
                     {Object.entries(PaymentMethodLabels).map(([value, label]) => (
                         <option key={value} value={value}>
@@ -411,8 +411,8 @@ export default function BookingForm({
 
             {/* Notas Adicionales */}
             <div>
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-[#073642] mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-[#0F9D58]" />
                     Notas Adicionales (Opcional)
                 </h4>
                 <textarea
@@ -421,18 +421,18 @@ export default function BookingForm({
                     value={formData.customerNotes}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58] focus:border-[#0F9D58]"
                     placeholder="Ejemplo: Favor lavar también el motor, tiene mucho polvo..."
                 />
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <div className="flex gap-3 pt-4 border-t border-emerald-200">
                 {onCancel && (
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                        className="flex-1 px-6 py-3 border border-emerald-200 text-[#073642] rounded-lg font-medium hover:bg-emerald-50 transition-colors"
                     >
                         Cancelar
                     </button>
@@ -440,7 +440,7 @@ export default function BookingForm({
                 <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-[#0F9D58] text-white rounded-lg font-medium hover:bg-[#0D8A4D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {loading ? (
                         <>

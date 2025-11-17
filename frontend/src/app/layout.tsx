@@ -9,6 +9,8 @@ import { AppProvider } from "@/lib/providers/app-provider";
 import { ApiInitializer } from "@/lib/providers/api-initializer";
 import { ToastProvider } from "@/hooks/useToast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ClerkBackendSync } from "@/components/ClerkBackendSync";
+import { BackendConnectionToast } from "@/components/BackendConnectionToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,17 +42,24 @@ export default function RootLayout({
           <ToastProvider>
             <AppProvider>
               <MapProviderContextProvider>
+                <BackendConnectionToast />
                 {useClerk ? (
-                  <ClerkProvider publishableKey={publishableKey}>
-                    <ApiInitializer>
-                      <Navbar />
-                      {children}
-                      <Footer />
-                    </ApiInitializer>
+                  <ClerkProvider
+                    publishableKey={publishableKey}
+                    signInUrl="/sign-in"
+                    signUpUrl="/sign-up"
+                    afterSignInUrl="/dashboard"
+                    afterSignUpUrl="/dashboard"
+                  >
+                    <ClerkBackendSync>
+                      <ApiInitializer>
+                        {children}
+                        <Footer />
+                      </ApiInitializer>
+                    </ClerkBackendSync>
                   </ClerkProvider>
                 ) : (
                   <>
-                    <Navbar />
                     {children}
                     <Footer />
                   </>

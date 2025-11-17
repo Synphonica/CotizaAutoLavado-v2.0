@@ -2,11 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import compression from '@fastify/compress';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { setupSwagger } from './swagger.config';
 
 async function bootstrap() {
   // Crear aplicación con Fastify
@@ -20,6 +21,9 @@ async function bootstrap() {
 
   // Configurar prefijo global de API
   app.setGlobalPrefix('api');
+
+  // Configurar filtro global de excepciones
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Configurar validación global
   app.useGlobalPipes(
@@ -74,37 +78,9 @@ async function bootstrap() {
     encodings: ['gzip', 'deflate'],
   });
 
-  // Configurar Swagger
-  if (process.env.ENABLE_SWAGGER === 'true') {
-    const config = new DocumentBuilder()
-      .setTitle('Alto Carwash API')
-      .setDescription('API para plataforma agregadora de servicios de lavado automotriz')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .addTag('auth', 'Autenticación y autorización')
-      .addTag('users', 'Gestión de usuarios')
-      .addTag('providers', 'Gestión de proveedores')
-      .addTag('services', 'Catálogo de servicios')
-      .addTag('reviews', 'Sistema de reseñas')
-      .addTag('favorites', 'Sistema de favoritos')
-      .addTag('notifications', 'Sistema de notificaciones')
-      .addTag('search', 'Sistema de búsqueda')
-      .addTag('comparison', 'Comparador de servicios y precios')
-      .addTag('maps', 'Servicios de geocodificación y distancias')
-      .addTag('ai', 'Inteligencia Artificial y recomendaciones')
-      .addTag('analytics', 'Métricas y estadísticas del sistema')
-      .addTag('upload', 'Gestión de archivos e imágenes')
-      .addTag('email', 'Sistema de notificaciones por email')
-      .addTag('health', 'Estado del sistema')
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document, {
-      swaggerOptions: {
-        persistAuthorization: true,
-        displayRequestDuration: true,
-      },
-    });
+  // Configurar Swagger / OpenAPI Documentation
+  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+    setupSwagger(app);
   }
 
   // Puerto de la aplicación

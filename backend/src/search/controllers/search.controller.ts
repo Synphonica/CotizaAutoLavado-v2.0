@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Query,
+  Param,
   UseGuards,
   HttpCode,
   HttpStatus
@@ -62,6 +63,7 @@ export class SearchController {
   @ApiQuery({ name: 'lng', required: false, type: Number, description: 'Longitud' })
   @ApiQuery({ name: 'radius', required: false, type: Number, description: 'Radio en km' })
   @ApiQuery({ name: 'city', required: false, type: String, description: 'Ciudad' })
+  @ApiQuery({ name: 'region', required: false, type: String, description: 'Región' })
   @ApiQuery({ name: 'type', required: false, enum: ['BASIC_WASH', 'PREMIUM_WASH', 'DETAILING', 'WAXING', 'INTERIOR_CLEAN', 'ENGINE_CLEAN', 'TIRE_CLEAN', 'PAINT_PROTECTION', 'CERAMIC_COATING'] })
   @ApiQuery({ name: 'minPrice', required: false, type: Number, description: 'Precio mínimo' })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number, description: 'Precio máximo' })
@@ -77,6 +79,7 @@ export class SearchController {
       longitude: query.lng ? parseFloat(query.lng) : undefined,
       radius: query.radius ? parseInt(query.radius) : undefined,
       city: query.city,
+      region: query.region,
       serviceType: query.type,
       minPrice: query.minPrice ? parseInt(query.minPrice) : undefined,
       maxPrice: query.maxPrice ? parseInt(query.maxPrice) : undefined,
@@ -263,5 +266,64 @@ export class SearchController {
       max: Number(stats._max.price) || 0,
       average: Math.round(Number(stats._avg.price) || 0)
     };
+  }
+
+  @Get('locations')
+  @Public()
+  @ApiOperation({
+    summary: 'Obtener todas las ubicaciones disponibles',
+    description: 'Retorna todas las regiones y comunas donde hay servicios disponibles'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Ubicaciones obtenidas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        regions: {
+          type: 'array',
+          items: { type: 'string' },
+          example: ['Región Metropolitana', 'Región de Valparaíso']
+        },
+        cities: {
+          type: 'array',
+          items: { type: 'string' },
+          example: ['Santiago', 'Providencia', 'Las Condes']
+        },
+        regionCityMap: {
+          type: 'object',
+          additionalProperties: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      }
+    }
+  })
+  async getLocations(): Promise<{
+    regions: string[];
+    cities: string[];
+    regionCityMap: Record<string, string[]>;
+  }> {
+    return this.searchService.getAvailableLocations();
+  }
+
+  @Get('similar/:serviceId')
+  @Public()
+  @ApiOperation({
+    summary: 'Obtener servicios similares',
+    description: 'Retorna servicios similares del mismo tipo y rango de precio para comparación'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Servicios similares obtenidos exitosamente',
+    type: [SearchResultDto]
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Número de servicios similares a retornar' })
+  async getSimilarServices(
+    @Param('serviceId') serviceId: string,
+    @Query('limit') limit?: number
+  ): Promise<SearchResultDto[]> {
+    return this.searchService.getSimilarServices(serviceId, limit ? Number(limit) : 6);
   }
 }

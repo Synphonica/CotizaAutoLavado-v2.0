@@ -1,14 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, IsEnum, IsArray, IsBoolean, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, IsEnum, IsArray, IsBoolean, Min, Max, MaxLength } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ServiceType, ServiceStatus } from '@prisma/client';
 
 export class SearchQueryDto {
     @ApiProperty({
         description: 'Término de búsqueda (nombre del servicio, proveedor, etc.)',
-        example: 'lavado premium'
+        example: 'lavado premium',
+        maxLength: 200
     })
     @IsString()
+    @MaxLength(200, { message: 'El término de búsqueda no puede exceder 200 caracteres' })
+    @Transform(({ value }) => value?.trim())
     query: string;
 
     @ApiPropertyOptional({
@@ -44,17 +47,23 @@ export class SearchQueryDto {
 
     @ApiPropertyOptional({
         description: 'Ciudad para filtrar resultados',
-        example: 'Santiago'
+        example: 'Santiago',
+        maxLength: 100
     })
     @IsString()
+    @MaxLength(100)
+    @Transform(({ value }) => value?.trim())
     @IsOptional()
     city?: string;
 
     @ApiPropertyOptional({
         description: 'Región para filtrar resultados',
-        example: 'Metropolitana'
+        example: 'Metropolitana',
+        maxLength: 100
     })
     @IsString()
+    @MaxLength(100)
+    @Transform(({ value }) => value?.trim())
     @IsOptional()
     region?: string;
 

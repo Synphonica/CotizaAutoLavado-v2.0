@@ -107,6 +107,10 @@ export class SearchResultDto {
             region: { type: 'string', example: 'Metropolitana' },
             phone: { type: 'string', example: '+56912345678' },
             email: { type: 'string', example: 'contacto@autolavado.cl' },
+            website: { type: 'string', example: 'https://autolavado.cl' },
+            instagram: { type: 'string', example: 'https://instagram.com/autolavado' },
+            facebook: { type: 'string', example: 'https://facebook.com/autolavado' },
+            twitter: { type: 'string', example: 'https://twitter.com/autolavado' },
             rating: { type: 'number', example: 4.8 },
             reviewCount: { type: 'number', example: 150 },
             isVerified: { type: 'boolean', example: true },
@@ -123,6 +127,10 @@ export class SearchResultDto {
         region: string;
         phone: string;
         email: string;
+        website?: string;
+        instagram?: string;
+        facebook?: string;
+        twitter?: string;
         rating: number;
         reviewCount: number;
         isVerified: boolean;

@@ -324,3 +324,6 @@ html {
   background-color: var(--brand-orange);
   color: white;
 }
+
+/* Sidebar collapse variant */
+@custom-variant sidebar-collapsed (.sidebar-collapsed &);

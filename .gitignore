@@ -128,3 +128,7 @@ docs/
 # ===== DOCUMENTACION PRIVADA =====
 # Documentacion interna no publica
 docs/
+
+# ===== SCRAPER PRIVADO =====
+# Scripts de scraping no públicos
+scraper/

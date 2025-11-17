@@ -194,37 +194,6 @@ export class EmailService {
     return this.sendEmail(emailDto);
   }
 
-  async sendPriceAlertEmail(
-    userEmail: string,
-    userName: string,
-    serviceData: any,
-    providerData: any,
-    userId?: string
-  ): Promise<EmailResponseDto> {
-    const emailDto: SendEmailDto = {
-      to: userEmail,
-      subject: `¡Alerta de precio! ${serviceData.name} ahora cuesta $${serviceData.newPrice}`,
-      type: EmailType.PRICE_ALERT,
-      variables: {
-        userName,
-        serviceName: serviceData.name,
-        oldPrice: serviceData.oldPrice,
-        newPrice: serviceData.newPrice,
-        discountPercent: serviceData.discountPercent,
-        providerName: providerData.businessName,
-        providerAddress: providerData.address,
-        providerRating: providerData.rating,
-        reviewCount: providerData.reviewCount,
-        providerPhone: providerData.phone,
-        serviceUrl: `${this.appUrl}/services/${serviceData.id}`,
-        unsubscribeUrl: `${this.appUrl}/unsubscribe?email=${userEmail}`
-      },
-      userId
-    };
-
-    return this.sendEmail(emailDto);
-  }
-
   async sendWeeklyDigest(
     userEmail: string,
     userName: string,
@@ -299,6 +268,39 @@ export class EmailService {
       subject: `[TEST] ${testEmailDto.type} - Alto Carwash`,
       type: testEmailDto.type,
       variables: testEmailDto.variables || {}
+    };
+
+    return this.sendEmail(emailDto);
+  }
+
+  /**
+   * Enviar email de alerta de precio
+   */
+  async sendPriceAlertEmail(data: {
+    to: string;
+    userName: string;
+    serviceName: string;
+    providerName: string;
+    currentPrice: number;
+    oldPrice: number;
+    discountPercent: number;
+    serviceUrl: string;
+  }): Promise<EmailResponseDto> {
+    const emailDto: SendEmailDto = {
+      to: data.to,
+      subject: `🔔 ¡Alerta de Precio! ${data.serviceName} bajó ${data.discountPercent > 0 ? `${data.discountPercent}%` : ''}`,
+      type: EmailType.PRICE_ALERT,
+      variables: {
+        userName: data.userName,
+        serviceName: data.serviceName,
+        providerName: data.providerName,
+        currentPrice: data.currentPrice.toLocaleString('es-CL'),
+        oldPrice: data.oldPrice.toLocaleString('es-CL'),
+        discountPercent: data.discountPercent,
+        savings: (data.oldPrice - data.currentPrice).toLocaleString('es-CL'),
+        serviceUrl: data.serviceUrl,
+        appUrl: this.appUrl,
+      },
     };
 
     return this.sendEmail(emailDto);

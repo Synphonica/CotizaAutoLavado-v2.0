@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export function FilterPill({ label, active, icon: Icon }: { label: string; active?: boolean; icon?: React.ComponentType<{ className?: string }> }) {
   const [isActive, setIsActive] = useState(Boolean(active));
-  
+
   return (
     <motion.button
       type="button"
@@ -14,13 +14,12 @@ export function FilterPill({ label, active, icon: Icon }: { label: string; activ
       whileTap={{ scale: 0.95 }}
       className="transition-all duration-200"
     >
-      <Badge 
+      <Badge
         variant={isActive ? "default" : "outline"}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
-          isActive 
-            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg" 
-            : "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:text-blue-600"
-        }`}
+        className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${isActive
+            ? "bg-[#FFD166] text-[#073642] border-[#FFD166] shadow-lg shadow-[#FFD166]/30"
+            : "bg-white text-[#073642] border-emerald-200 hover:border-[#0F9D58] hover:text-[#0F9D58] hover:bg-emerald-50"
+          }`}
       >
         {Icon && <Icon className="h-3 w-3 mr-1" />}
         {label}
