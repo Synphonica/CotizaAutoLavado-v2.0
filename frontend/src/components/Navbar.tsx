@@ -6,29 +6,73 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Droplets, Search, Home, DollarSign, Bell,
-  TrendingUp, Heart, Wallet, MessageSquare,
-  LogOut, Settings, Moon, Sun, Menu, X, GitCompare, Sparkles, MapPin
+  Droplets, Search, Home, Bell, Heart, History,
+  LogOut, Settings, Moon, Sun, Menu, X, GitCompare, Sparkles, MapPin,
+  LayoutDashboard, Users, Building2, FileText, Wrench, MessageSquare,
+  Package, Calendar, Image as ImageIcon, Clock, Tag, Shield, Briefcase, Bot
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { SearchWithAI } from "@/components/ai/SearchWithAI";
+import { AIStatusIndicator } from "@/components/ai/AIStatusIndicator";
 
 export function ModernNavbar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showAISearch, setShowAISearch] = useState(false);
+  const { role, isLoading } = useAuth();
 
-  const navItems = [
-    { href: "/", label: "Dashboard", icon: Home },
+  // Menús según rol
+  const customerNavItems: Array<{ href: string; label: string; icon: any; protected?: boolean }> = [
+    { href: "/", label: "Inicio", icon: Home },
+    { href: "/ai-assistant", label: "Asistente IA", icon: Sparkles, protected: true },
     { href: "/results", label: "Buscar", icon: Search },
     { href: "/compare", label: "Comparar", icon: GitCompare },
     { href: "/map", label: "Mapa", icon: MapPin },
     { href: "/notifications", label: "Notificaciones", icon: Bell, protected: true },
-    { href: "/analytics", label: "Analytics", icon: TrendingUp, protected: true },
+    { href: "/history", label: "Historial", icon: History, protected: true },
     { href: "/favorites", label: "Favoritos", icon: Heart, protected: true },
-    { href: "/wallet", label: "Wallet", icon: Wallet, protected: true },
-    { href: "/messages", label: "Mensajes", icon: MessageSquare, protected: true },
+    { href: "/provider/onboarding", label: "Registrar mi negocio", icon: Briefcase, protected: true },
   ];
+
+  const providerNavItems: Array<{ href: string; label: string; icon: any; protected?: boolean }> = [
+    { href: "/provider/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/provider/dashboard/services", label: "Servicios", icon: Package },
+    { href: "/provider/dashboard/bookings", label: "Reservas", icon: Calendar },
+    { href: "/provider/dashboard/schedule", label: "Horarios", icon: Clock },
+    { href: "/provider/dashboard/promotions", label: "Promociones", icon: Tag },
+    { href: "/provider/dashboard/gallery", label: "Galería", icon: ImageIcon },
+    { href: "/provider/dashboard/ai-insights", label: "Análisis IA", icon: Sparkles },
+    { href: "/provider/settings", label: "Configuración", icon: Settings },
+  ];
+
+  const adminNavItems: Array<{ href: string; label: string; icon: any; protected?: boolean }> = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "Usuarios", icon: Users },
+    { href: "/admin/providers", label: "Proveedores", icon: Building2 },
+    { href: "/admin/requests", label: "Solicitudes", icon: FileText },
+    { href: "/admin/services", label: "Servicios", icon: Wrench },
+    { href: "/admin/reviews", label: "Reseñas", icon: MessageSquare },
+  ];
+
+  // Seleccionar menú según rol
+  const getNavItems = () => {
+    if (isLoading) return customerNavItems; // Mostrar menú por defecto mientras carga
+
+    switch (role) {
+      case 'ADMIN':
+        return adminNavItems;
+      case 'PROVIDER':
+        return providerNavItems;
+      case 'CUSTOMER':
+      default:
+        return customerNavItems;
+    }
+  };
+
+  const navItems = getNavItems();
 
   useEffect(() => {
     if (isDarkMode) {
@@ -46,16 +90,51 @@ export function ModernNavbar() {
     }
   }, [isCollapsed]);
 
+  // Obtener título según rol
+  const getTitle = () => {
+    switch (role) {
+      case 'ADMIN':
+        return 'Panel Admin';
+      case 'PROVIDER':
+        return 'Panel Proveedor';
+      case 'CUSTOMER':
+      default:
+        return 'CotizaAutoLavado';
+    }
+  };
+
+  // Obtener color de gradiente según rol
+  const getGradientColors = () => {
+    switch (role) {
+      case 'ADMIN':
+        return 'from-red-500 to-pink-500';
+      case 'PROVIDER':
+        return 'from-blue-500 to-cyan-500';
+      case 'CUSTOMER':
+      default:
+        return 'from-[#0F9D58] to-[#2B8EAD]';
+    }
+  };
+
   return (
     <>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#0F9D58] to-[#2B8EAD] rounded-lg flex items-center justify-center">
-              <Droplets className="h-5 w-5 text-white" />
+            <div className={`w-8 h-8 bg-gradient-to-br ${getGradientColors()} rounded-lg flex items-center justify-center`}>
+              {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+                  <Droplets className="h-5 w-5 text-white" />}
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Alto Carwash</span>
+            <div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white block">{getTitle()}</span>
+              {role && role !== 'CUSTOMER' && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
+                  {role === 'ADMIN' ? 'Administrador' : 'Proveedor'}
+                </span>
+              )}
+            </div>
           </Link>
 
           <button
@@ -114,7 +193,7 @@ export function ModernNavbar() {
 
               <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
                 <SignedIn>
-                  <Link href="/settings" onClick={() => setIsMobileOpen(false)}>
+                  <Link href={role === 'PROVIDER' ? '/provider/settings' : '/settings'} onClick={() => setIsMobileOpen(false)}>
                     <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 w-full">
                       <Settings className="h-5 w-5" />
                       Settings
@@ -169,17 +248,28 @@ export function ModernNavbar() {
           {/* Logo & Collapse Button */}
           <div className="flex items-center justify-between mb-6">
             {!isCollapsed && (
-              <Link href="/" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B35] to-[#F9C74F] rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Droplets className="h-5 w-5 text-white" />
+              <Link href={role === 'ADMIN' ? '/admin' : role === 'PROVIDER' ? '/provider/dashboard' : '/'} className="flex items-center gap-3">
+                <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColors()} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                    role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+                      <Droplets className="h-5 w-5 text-white" />}
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">Alto Carwash</span>
+                <div>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white block">{getTitle()}</span>
+                  {role && role !== 'CUSTOMER' && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {role === 'ADMIN' ? 'Administrador' : 'Proveedor'}
+                    </span>
+                  )}
+                </div>
               </Link>
             )}
 
             {isCollapsed && (
-              <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B35] to-[#F9C74F] rounded-xl flex items-center justify-center mx-auto">
-                <Droplets className="h-5 w-5 text-white" />
+              <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColors()} rounded-xl flex items-center justify-center mx-auto`}>
+                {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                  role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+                    <Droplets className="h-5 w-5 text-white" />}
               </div>
             )}
 
@@ -194,22 +284,30 @@ export function ModernNavbar() {
               </button>
             )}
           </div>
-
-          {/* Search Bar */}
-          {!isCollapsed && (
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="pl-10 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl"
-              />
+          {/* AI Search Toggle - Solo para clientes */}
+          {!isCollapsed && role === 'CUSTOMER' && (
+            <div className="mb-6 space-y-2">
+              <button
+                onClick={() => setShowAISearch(!showAISearch)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border-2 border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 transition-all group"
+              >
+                <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 group-hover:rotate-12 transition-transform" />
+                <span className="text-purple-700 dark:text-purple-300">Buscar con IA</span>
+                <Bot className="h-4 w-4 ml-auto text-purple-500" />
+              </button>
+              <div className="px-4">
+                <AIStatusIndicator />
+              </div>
             </div>
           )}
 
-          {isCollapsed && (
-            <button className="mb-6 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
-              <Search className="h-5 w-5 text-gray-400" />
+          {isCollapsed && role === 'CUSTOMER' && (
+            <button
+              onClick={() => setShowAISearch(!showAISearch)}
+              className="mb-6 p-3 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 hover:from-purple-200 hover:to-blue-200 dark:hover:from-purple-900/50 dark:hover:to-blue-900/50 flex items-center justify-center transition-all"
+              title="Buscar con IA"
+            >
+              <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </button>
           )}
 
@@ -305,7 +403,7 @@ export function ModernNavbar() {
 
             <SignedIn>
               <Link
-                href="/settings"
+                href={role === 'PROVIDER' ? '/provider/settings' : '/settings'}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all ${isCollapsed ? 'justify-center' : ''}`}
                 title={isCollapsed ? "Settings" : undefined}
               >
@@ -385,6 +483,40 @@ export function ModernNavbar() {
           </button>
         )}
       </aside>
+
+      {/* AI Search Modal */}
+      {showAISearch && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAISearch(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative z-10 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-2xl mx-4 p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-purple-500 to-blue-500 rounded-full p-2">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Búsqueda con IA</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Describe lo que buscas en lenguaje natural</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAISearch(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <SearchWithAI />
+          </div>
+        </div>
+      )}
 
       {/* Spacer for content (when sidebar is present) */}
       <div className={`hidden lg:block transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-72'}`}></div>

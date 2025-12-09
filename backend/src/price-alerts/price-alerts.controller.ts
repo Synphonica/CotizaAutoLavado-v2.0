@@ -12,11 +12,11 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PriceAlertsService } from './price-alerts.service';
 import { CreatePriceAlertDto, UpdatePriceAlertDto } from './dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 
 @ApiTags('Price Alerts')
 @Controller('price-alerts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class PriceAlertsController {
     constructor(private readonly priceAlertsService: PriceAlertsService) { }

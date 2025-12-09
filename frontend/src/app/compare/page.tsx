@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@clerk/nextjs";
 import { ModernNavbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ServiceItem } from "@/components/ServiceCard";
 import { Search, Star, MapPin, Clock, TrendingUp, TrendingDown, Minus, Plus, X, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api";
+import { ServiceCardSkeleton, ComparisonTableSkeleton } from "@/components/ui/loading-skeletons";
 
 // Backend response types
 interface BackendSearchResult {
@@ -66,6 +68,7 @@ function transformToServiceItem(backendResult: BackendSearchResult): ServiceItem
 }
 
 export default function ComparePage() {
+  const { getToken } = useAuth();
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,8 +84,11 @@ export default function ComparePage() {
         setError(null);
         console.log('🔍 Fetching services from backend API...');
 
+        // Get authentication token
+        const token = await getToken();
+
         // Fetch all services with a large limit to get variety
-        const data = await apiGet<BackendSearchResponse>(`/search?q=&page=1&limit=100`);
+        const data = await apiGet<BackendSearchResponse>(`/search?q=&page=1&limit=100`, { token });
         console.log('✅ Backend response:', data);
 
         const transformedServices = data.results.map(transformToServiceItem);
@@ -140,15 +146,39 @@ export default function ComparePage() {
 
   const priceComparison = getPriceComparison();
 
-  // Loading state
+  // Loading state with skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[#0F9D58] mx-auto mb-4" />
-          <p className="text-xl text-[#073642]">Cargando servicios...</p>
+      <>
+        <ModernNavbar />
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-white lg:ml-72 transition-all duration-300">
+          {/* Header skeleton */}
+          <div className="bg-gradient-to-br from-[#0F9D58] via-[#2B8EAD] to-[#0F9D58] py-16 px-4 mb-8">
+            <div className="max-w-7xl mx-auto text-center">
+              <div className="h-8 w-64 bg-white/20 rounded-full mx-auto mb-6"></div>
+              <div className="h-12 w-3/4 bg-white/30 rounded mx-auto mb-4"></div>
+              <div className="h-6 w-1/2 bg-white/20 rounded mx-auto"></div>
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 pb-12">
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Services list skeleton */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-12 w-full bg-white rounded-lg shadow"></div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <ServiceCardSkeleton key={i} />
+                  ))}
+                </div>
+              </div>
+              {/* Comparison panel skeleton */}
+              <div className="lg:col-span-1">
+                <ComparisonTableSkeleton />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

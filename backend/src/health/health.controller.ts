@@ -1,13 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HealthService } from './health.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly healthService: HealthService) {}
+  constructor(private readonly healthService: HealthService) { }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Verificar estado del sistema' })
   @ApiResponse({ status: 200, description: 'Sistema funcionando correctamente' })
   @ApiResponse({ status: 503, description: 'Sistema con problemas' })
@@ -16,6 +18,7 @@ export class HealthController {
   }
 
   @Get('database')
+  @Public()
   @ApiOperation({ summary: 'Verificar conexión a la base de datos' })
   @ApiResponse({ status: 200, description: 'Base de datos conectada' })
   @ApiResponse({ status: 503, description: 'Error de conexión a la base de datos' })
@@ -24,6 +27,7 @@ export class HealthController {
   }
 
   @Get('detailed')
+  @Public()
   @ApiOperation({ summary: 'Verificación detallada del sistema' })
   @ApiResponse({ status: 200, description: 'Información detallada del sistema' })
   async checkDetailed() {

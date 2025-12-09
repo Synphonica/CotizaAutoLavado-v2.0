@@ -9,29 +9,32 @@ datasource db {
 }
 
 model User {
-  id               String          @id @default(cuid())
-  clerkId          String?         @unique
-  email            String          @unique
-  firstName        String
-  lastName         String
-  phone            String?
-  role             UserRole        @default(CUSTOMER)
-  status           UserStatus      @default(ACTIVE)
-  avatar           String?
-  dateOfBirth      DateTime?
-  preferences      Json?
-  defaultLatitude  Float?
-  defaultLongitude Float?
-  defaultAddress   String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  lastLoginAt      DateTime?
-  favorites        Favorite[]
-  notifications    Notification[]
-  providerProfile  Provider?
-  reviews          Review[]
-  searchHistory    SearchHistory[]
-  priceAlerts      PriceAlert[]
+  id                       String            @id @default(cuid())
+  clerkId                  String?           @unique
+  email                    String            @unique
+  firstName                String
+  lastName                 String
+  phone                    String?
+  role                     UserRole          @default(CUSTOMER)
+  status                   UserStatus        @default(ACTIVE)
+  avatar                   String?
+  dateOfBirth              DateTime?
+  preferences              Json?
+  defaultLatitude          Float?
+  defaultLongitude         Float?
+  defaultAddress           String?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  lastLoginAt              DateTime?
+  favorites                Favorite[]
+  notifications            Notification[]
+  providerProfile          Provider?
+  providerRequests         ProviderRequest[] @relation("UserProviderRequests")
+  reviewedProviderRequests ProviderRequest[] @relation("ReviewerProviderRequests")
+  reviews                  Review[]
+  searchHistory            SearchHistory[]
+  priceAlerts              PriceAlert[]
+  bookings                 Booking[]
 
   @@index([defaultLatitude, defaultLongitude], map: "user_location_idx")
   @@index([role], map: "user_role_idx")
@@ -41,7 +44,7 @@ model User {
 
 model Provider {
   id                String          @id @default(cuid())
-  userId            String          @unique
+  userId            String?         @unique
   businessName      String
   businessType      String
   description       String?
@@ -61,13 +64,13 @@ model Provider {
   operatingHours    Json
   businessLicense   String?
   taxId             String?
-  bankAccount       Json?
   acceptsBookings   Boolean         @default(true)
   minAdvanceBooking Int             @default(60)
   maxAdvanceBooking Int             @default(10080)
   rating            Float           @default(0)
   totalReviews      Int             @default(0)
   totalBookings     Int             @default(0)
+  isImported        Boolean         @default(false)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   verifiedAt        DateTime?
@@ -76,9 +79,10 @@ model Provider {
   notifications     Notification[]
   promotions        Promotion[]
   images            ProviderImage[]
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   reviews           Review[]
   services          Service[]
+  bookings          Booking[]
 
   @@index([latitude, longitude], map: "provider_location_idx")
   @@index([status], map: "provider_status_idx")
@@ -119,6 +123,7 @@ model Service {
   priceAlerts         PriceAlert[]
   priceHistory        PriceHistory[]
   provider            Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  bookings            Booking[]
 
   @@index([providerId], map: "service_provider_idx")
   @@index([type], map: "service_type_idx")
@@ -282,12 +287,6 @@ model Booking {
   serviceName     String
   serviceDuration Int // Duración en minutos
 
-  // Pago
-  paymentStatus PaymentStatus  @default(PENDING)
-  paymentMethod PaymentMethod?
-  paidAmount    Decimal?       @db.Decimal(10, 2)
-  transactionId String?
-
   // Notas y detalles adicionales
   customerNotes      String? // Notas del cliente
   providerNotes      String? // Notas del proveedor
@@ -304,13 +303,17 @@ model Booking {
   reminderSent   Boolean   @default(false)
   reminderSentAt DateTime?
 
+  // Relaciones
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
   @@index([userId], map: "booking_user_idx")
   @@index([providerId], map: "booking_provider_idx")
   @@index([serviceId], map: "booking_service_idx")
   @@index([status], map: "booking_status_idx")
   @@index([bookingDate], map: "booking_date_idx")
   @@index([startTime], map: "booking_start_time_idx")
-  @@index([paymentStatus], map: "booking_payment_status_idx")
   @@map("bookings")
 }
 
@@ -462,10 +465,10 @@ enum BookingStatus {
 
 enum PaymentStatus {
   PENDING // Pago pendiente
-  PAID // Pagado
-  PARTIALLY_PAID // Pago parcial
-  REFUNDED // Reembolsado
+  COMPLETED // Pago completado
   FAILED // Pago fallido
+  REFUNDED // Pago reembolsado
+  CANCELLED // Pago cancelado
 }
 
 enum PaymentMethod {
@@ -473,5 +476,42 @@ enum PaymentMethod {
   CREDIT_CARD // Tarjeta de crédito
   DEBIT_CARD // Tarjeta de débito
   TRANSFER // Transferencia bancaria
-  ONLINE_PAYMENT // Pago online (WebPay, MercadoPago, etc.)
+  WEBPAY // Webpay
+  MERCADOPAGO // Mercado Pago
+  FLOW // Flow
+  OTHER // Otro
+}
+
+enum ProviderRequestStatus {
+  PENDING // Solicitud pendiente de revisión
+  UNDER_REVIEW // En proceso de revisión
+  APPROVED // Solicitud aprobada
+  REJECTED // Solicitud rechazada
+}
+
+model ProviderRequest {
+  id              String                @id @default(cuid())
+  userId          String
+  businessName    String
+  businessType    String
+  email           String
+  phone           String
+  address         String?
+  city            String
+  region          String
+  description     String?
+  reason          String?
+  status          ProviderRequestStatus @default(PENDING)
+  rejectionReason String?
+  adminNotes      String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation("UserProviderRequests", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer        User?                 @relation("ReviewerProviderRequests", fields: [reviewedBy], references: [id])
+
+  @@index([userId], map: "provider_request_user_idx")
+  @@index([status], map: "provider_request_status_idx")
+  @@map("provider_requests")
 }

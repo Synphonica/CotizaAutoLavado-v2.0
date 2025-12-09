@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, List, Filter, Navigation, Loader2, MapPin, Crosshair } from "lucide-react";
 import { apiGet } from "@/lib/api";
+import { MapSkeleton, ServiceCardSkeleton } from "@/components/ui/loading-skeletons";
+import { useAuth } from "@clerk/nextjs";
 
 // Backend response types
 interface BackendSearchResult {
@@ -74,6 +76,7 @@ function transformToServiceItem(backendResult: BackendSearchResult): ServiceItem
 }
 
 export default function MapPage() {
+  const { getToken } = useAuth();
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [nearbyServices, setNearbyServices] = useState<ServiceItem[]>([]);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -194,7 +197,8 @@ export default function MapPage() {
         setError(null);
         console.log('🔍 Fetching all services...');
 
-        const data = await apiGet<BackendSearchResponse>(`/search?q=&page=1&limit=200`);
+        const token = await getToken();
+        const data = await apiGet<BackendSearchResponse>(`/search?q=&page=1&limit=200`, { token });
         console.log('✅ Services loaded:', data.results.length);
 
         const transformedServices = data.results.map(transformToServiceItem);
@@ -208,7 +212,7 @@ export default function MapPage() {
     }
 
     fetchServices();
-  }, []);
+  }, [getToken]);
 
   // Get user location and fetch nearby services
   useEffect(() => {
@@ -234,8 +238,10 @@ export default function MapPage() {
           // Fetch nearby services using the backend API
           try {
             console.log('📍 Fetching nearby services...', location);
+            const token = await getToken();
             const data = await apiGet<BackendSearchResponse>(
-              `/search/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radiusKm}&limit=50`
+              `/search/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radiusKm}&limit=50`,
+              { token }
             );
             console.log('✅ Nearby services:', data.results.length);
             const transformedNearby = data.results.map(transformToServiceItem);
@@ -273,15 +279,32 @@ export default function MapPage() {
     }
   }, [radiusKm]);
 
-  // Loading state
+  // Loading state with skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-[#0F9D58] mx-auto mb-4" />
-          <p className="text-xl text-[#073642]">Cargando mapa...</p>
+      <>
+        <ModernNavbar />
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-white lg:ml-72 transition-all duration-300">
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            {/* Header skeleton */}
+            <div className="mb-8">
+              <div className="h-10 w-96 bg-emerald-100 rounded-lg mb-2 animate-pulse"></div>
+              <div className="h-5 w-64 bg-emerald-50 rounded animate-pulse"></div>
+            </div>
+            {/* Map and list skeleton */}
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <MapSkeleton />
+              </div>
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <ServiceCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

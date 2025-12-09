@@ -6,7 +6,8 @@ import { QueryProvidersDto } from '../dto/query-providers.dto';
 import { UpdateProviderStatusDto } from '../dto/update-provider-status.dto';
 import { NearbyProvidersDto } from '../dto/nearby-providers.dto';
 import { ProviderResponseDto, ProviderListResponseDto } from '../dto/provider-response.dto';
-import { ProviderStatus } from '@prisma/client';
+import { ProviderStatus, UserRole } from '@prisma/client';
+import { clerkClient } from '@clerk/clerk-sdk-node';
 
 @Injectable()
 export class ProvidersService {
@@ -15,7 +16,7 @@ export class ProvidersService {
     /**
      * Crear un nuevo proveedor
      */
-    async create(createProviderDto: CreateProviderDto, userId: string): Promise<ProviderResponseDto> {
+    async create(createProviderDto: CreateProviderDto, clerkId: string): Promise<ProviderResponseDto> {
         const {
             businessName,
             businessType,
@@ -38,9 +39,18 @@ export class ProvidersService {
             status
         } = createProviderDto;
 
+        // Buscar el usuario por clerkId
+        const user = await this.prisma.user.findUnique({
+            where: { clerkId },
+        });
+
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
         // Verificar si el usuario ya tiene un proveedor
         const existingProvider = await this.prisma.provider.findUnique({
-            where: { userId },
+            where: { userId: user.id },
         });
 
         if (existingProvider) {
@@ -59,7 +69,7 @@ export class ProvidersService {
         // Crear proveedor
         const provider = await this.prisma.provider.create({
             data: {
-                userId,
+                userId: user.id,
                 businessName,
                 businessType,
                 description,
@@ -299,6 +309,24 @@ export class ProvidersService {
     }
 
     /**
+     * Obtener proveedor por Clerk ID
+     */
+    async findByClerkId(clerkId: string): Promise<ProviderResponseDto | null> {
+        // Primero buscar el usuario por clerkId
+        const user = await this.prisma.user.findUnique({
+            where: { clerkId },
+            select: { id: true },
+        });
+
+        if (!user) {
+            return null;
+        }
+
+        // Luego buscar el proveedor por userId
+        return this.findByUserId(user.id);
+    }
+
+    /**
      * Actualizar un proveedor
      */
     async update(id: string, updateProviderDto: UpdateProviderDto): Promise<ProviderResponseDto> {
@@ -390,6 +418,17 @@ export class ProvidersService {
     async updateStatus(id: string, updateStatusDto: UpdateProviderStatusDto): Promise<ProviderResponseDto> {
         const { status } = updateStatusDto;
 
+        // Primero obtener el proveedor para acceder al usuario
+        const existingProvider = await this.prisma.provider.findUnique({
+            where: { id },
+            include: { user: true }
+        });
+
+        if (!existingProvider) {
+            throw new NotFoundException('Proveedor no encontrado');
+        }
+
+        // Actualizar el proveedor
         const provider = await this.prisma.provider.update({
             where: { id },
             data: {
@@ -403,10 +442,63 @@ export class ProvidersService {
                         firstName: true,
                         lastName: true,
                         email: true,
+                        clerkId: true,
+                        role: true,
                     },
                 },
             },
         });
+
+        // Si el status cambia a ACTIVE, actualizar el rol del usuario a PROVIDER
+        if (status === ProviderStatus.ACTIVE && existingProvider.user) {
+            const user = existingProvider.user;
+
+            // Actualizar rol en la base de datos
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { role: UserRole.PROVIDER }
+            });
+
+            // Sincronizar con Clerk
+            try {
+                if (user.clerkId) {
+                    await clerkClient.users.updateUserMetadata(user.clerkId, {
+                        publicMetadata: {
+                            role: UserRole.PROVIDER
+                        }
+                    });
+                    console.log(`[ProvidersService] Updated Clerk metadata for user ${user.clerkId} to PROVIDER`);
+                }
+            } catch (error) {
+                console.error('[ProvidersService] Error updating Clerk metadata:', error);
+                // No lanzar error, continuar aunque falle la sincronización con Clerk
+            }
+        }
+
+        // Si el status cambia a INACTIVE, revertir el rol del usuario a CUSTOMER
+        if (status === ProviderStatus.INACTIVE && existingProvider.user) {
+            const user = existingProvider.user;
+
+            // Actualizar rol en la base de datos
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { role: UserRole.CUSTOMER }
+            });
+
+            // Sincronizar con Clerk
+            try {
+                if (user.clerkId) {
+                    await clerkClient.users.updateUserMetadata(user.clerkId, {
+                        publicMetadata: {
+                            role: UserRole.CUSTOMER
+                        }
+                    });
+                    console.log(`[ProvidersService] Updated Clerk metadata for user ${user.clerkId} to CUSTOMER`);
+                }
+            } catch (error) {
+                console.error('[ProvidersService] Error updating Clerk metadata:', error);
+            }
+        }
 
         return this.mapProviderToResponse(provider);
     }
@@ -524,3 +616,4 @@ export class ProvidersService {
         };
     }
 }
+

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ModernNavbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +24,9 @@ import {
   User,
   Car,
   Award,
-  Calendar
+  Calendar,
+  Building2,
+  ArrowRight
 } from "lucide-react";
 
 // Mock data para el dashboard
@@ -66,10 +69,21 @@ const mockHistory = [
 ];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const providerRequestStatus = searchParams.get('provider_request');
   const [favorites, setFavorites] = useState<ServiceItem[]>(mockFavorites);
   const [history, setHistory] = useState(mockHistory);
   const [loading, setLoading] = useState(true);
+
+  // Redirigir a dashboard de proveedor si el rol es PROVIDER
+  useEffect(() => {
+    if (role === 'PROVIDER') {
+      console.log('[Dashboard] User is PROVIDER, redirecting to provider dashboard');
+      router.push('/provider/dashboard');
+    }
+  }, [role, router]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -113,6 +127,67 @@ export default function DashboardPage() {
             transition={{ duration: 0.6 }}
             className="mb-8"
           >
+            {/* Mensaje de solicitud de proveedor pendiente */}
+            {providerRequestStatus === 'pending' && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <Card className="bg-gradient-to-r from-amber-500 to-orange-500 border-none">
+                  <CardContent className="p-6 text-white">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                        <Clock className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold mb-2">¡Solicitud enviada exitosamente!</h3>
+                        <p className="text-white/90 mb-3">
+                          Tu solicitud para convertirte en proveedor está siendo revisada por nuestro equipo.
+                          Te notificaremos por correo electrónico cuando tu cuenta sea aprobada.
+                        </p>
+                        <p className="text-sm text-white/80">
+                          Este proceso puede tomar entre 24-48 horas. Mientras tanto, puedes seguir usando la plataforma como cliente.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Banner para convertirse en proveedor - Solo mostrar si no hay solicitud pendiente */}
+            {providerRequestStatus !== 'pending' && (
+              <Card className="bg-gradient-to-r from-[#0F9D58] to-[#2B8EAD] border-none mb-6 overflow-hidden relative">
+                <CardContent className="p-6 text-white relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                        <Building2 className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold mb-1">¿Tienes un autolavado?</h3>
+                        <p className="text-white/90">
+                          Regístrate como proveedor y aumenta tus clientes hasta en un 300%
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="lg"
+                      onClick={() => window.location.href = '/provider/onboarding'}
+                      className="bg-white text-[#0F9D58] hover:bg-white/90 font-bold"
+                    >
+                      Registrar mi negocio
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                </CardContent>
+                {/* Decoración de fondo */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+                <div className="absolute bottom-0 right-20 w-48 h-48 bg-white/10 rounded-full -mb-24" />
+              </Card>
+            )}
+
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">

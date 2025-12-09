@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ModernNavbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServiceCard, ServiceItem } from "@/components/ServiceCard";
 import { apiGet } from "@/lib/api";
 import CreateAlertModal from "@/components/alerts/CreateAlertModal";
+import { ServiceDetailSkeleton } from "@/components/ui/loading-skeletons";
+import { useAuth } from "@clerk/nextjs";
 import {
   Star,
   MapPin,
@@ -30,7 +32,8 @@ import {
   TrendingUp,
   Bell,
   Globe,
-  Instagram
+  Instagram,
+  Navigation
 } from "lucide-react";
 import BookingCalendar from "@/components/booking/BookingCalendar";
 import TimeSlotPicker from "@/components/booking/TimeSlotPicker";
@@ -121,6 +124,7 @@ const mockServiceDetail = {
 export default function ServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap params usando React.use()
   const { id } = use(params);
+  const { getToken } = useAuth();
 
   const [service, setService] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -152,7 +156,8 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
 
       try {
         setLoading(true);
-        const data = await apiGet<any>(`/services/${id}`);
+        const token = await getToken();
+        const data = await apiGet<any>(`/services/${id}`, { token });
 
         // Mapear datos de la API a la estructura que espera el componente
         const mappedService = {
@@ -181,7 +186,9 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
             website: data.provider?.website || '',
             instagram: data.provider?.instagram || '',
             rating: data.provider?.rating || 0,
-            reviewCount: data.provider?.reviewCount || 0
+            reviewCount: data.provider?.reviewCount || 0,
+            acceptsBookings: data.provider?.acceptsBookings || false,
+            status: data.provider?.status || 'PENDING_APPROVAL'
           },
           features: data.includedServices || [],
           availability: data.isAvailable
@@ -192,6 +199,38 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
         };
 
         setService(mappedService);
+
+        // Guardar en historial de servicios vistos
+        const historyItem = {
+          id: mappedService.id,
+          name: mappedService.name,
+          price: mappedService.price,
+          provider: mappedService.provider?.businessName || 'Proveedor',
+          rating: mappedService.rating || 0,
+          discount: data.discountedPrice ? Math.round((1 - data.discountedPrice / data.price) * 100) : undefined,
+          duration: data.duration?.toString() || '',
+          viewedAt: new Date().toISOString()
+        };
+
+        try {
+          const existingHistory = localStorage.getItem('alto-carwash-viewed-services');
+          let history = existingHistory ? JSON.parse(existingHistory) : [];
+
+          // Remover si ya existe (para ponerlo al inicio)
+          history = history.filter((item: { id: string }) => item.id !== mappedService.id);
+
+          // Agregar al inicio
+          history.unshift(historyItem);
+
+          // Limitar a 50 elementos
+          if (history.length > 50) {
+            history = history.slice(0, 50);
+          }
+
+          localStorage.setItem('alto-carwash-viewed-services', JSON.stringify(history));
+        } catch (e) {
+          console.error('Error saving to history:', e);
+        }
       } catch (error) {
         console.error('Error loading service:', error);
         setError('No se pudo cargar el servicio. Por favor intenta nuevamente.');
@@ -206,6 +245,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
     } else {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Cargar servicios similares
@@ -219,7 +259,8 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
 
       try {
         setLoadingSimilar(true);
-        const data = await apiGet<ServiceItem[]>(`/search/similar/${id}?limit=6`);
+        const token = await getToken();
+        const data = await apiGet<ServiceItem[]>(`/search/similar/${id}?limit=6`, { token });
         setSimilarServices(data);
       } catch (error) {
         console.error('Error loading similar services:', error);
@@ -234,6 +275,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
     } else {
       setLoadingSimilar(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, service]);
 
   const nextImage = () => {
@@ -296,12 +338,10 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
   // Manejar estados de carga y error
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando servicio...</p>
-        </div>
-      </div>
+      <>
+        <ModernNavbar />
+        <ServiceDetailSkeleton />
+      </>
     );
   }
 
@@ -644,13 +684,23 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                   </div>
 
                   <div className="space-y-3">
-                    <Button
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg py-6 shadow-lg"
-                      onClick={openBookingModal}
-                    >
-                      <Calendar className="h-5 w-5 mr-2" />
-                      Agendar servicio
-                    </Button>
+                    {service.provider.acceptsBookings && service.provider.status === 'VERIFIED' ? (
+                      <Button
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg py-6 shadow-lg"
+                        onClick={openBookingModal}
+                      >
+                        <Calendar className="h-5 w-5 mr-2" />
+                        Agendar servicio
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full bg-gray-400 text-lg py-6 shadow-lg cursor-not-allowed"
+                        disabled
+                      >
+                        <Shield className="h-5 w-5 mr-2" />
+                        Proveedor no disponible para agendamiento
+                      </Button>
+                    )}
 
                     <Button
                       variant="outline"
@@ -680,12 +730,29 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                         variant="outline"
                         className="text-base py-3"
                         onClick={() => {
-                          const address = encodeURIComponent(service.provider.address || 'Santiago, Chile');
-                          window.location.href = `/map?address=${address}&provider=${service.provider.businessName}`;
+                          // Obtener coordenadas o dirección del proveedor
+                          const lat = service.provider.latitude;
+                          const lng = service.provider.longitude;
+                          const address = service.provider.address;
+
+                          // Si hay coordenadas, abrir Google Maps con navegación directa
+                          if (lat && lng) {
+                            // Abrir Google Maps con ruta de navegación
+                            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+                            window.open(url, '_blank');
+                          } else if (address) {
+                            // Si no hay coordenadas, buscar por dirección
+                            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address + ', Chile')}&travelmode=driving`;
+                            window.open(url, '_blank');
+                          } else {
+                            // Fallback: ir a la página del mapa interno
+                            const encodedAddress = encodeURIComponent(service.provider.address || 'Santiago, Chile');
+                            window.location.href = `/map?address=${encodedAddress}&provider=${encodeURIComponent(service.provider.businessName)}`;
+                          }
                         }}
                       >
-                        <MapPin className="h-4 w-4 mr-2" />
-                        Ubicación
+                        <Navigation className="h-4 w-4 mr-2" />
+                        Cómo llegar
                       </Button>
                     </div>
 
@@ -874,10 +941,10 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header del Modal */}
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 flex items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold mb-1">Agendar Servicio</h2>
-                      <p className="text-blue-100">{service.name}</p>
+                      <h2 className="text-xl sm:text-2xl font-bold mb-1">Agendar Servicio</h2>
+                      <p className="text-sm sm:text-base text-blue-100">{service.name}</p>
                     </div>
                     <button
                       onClick={closeBookingModal}
@@ -889,65 +956,65 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
 
                   {/* Progress Steps */}
                   {bookingStep !== 'success' && (
-                    <div className="px-6 pt-6 pb-4 bg-gray-50 border-b">
-                      <div className="flex items-center justify-center gap-4">
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 bg-gray-50 border-b">
+                      <div className="flex items-center justify-center gap-2 sm:gap-4">
                         {/* Step 1 */}
                         <div className="flex items-center">
-                          <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'calendar'
+                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-colors ${bookingStep === 'calendar'
                             ? 'bg-blue-600 border-blue-600 text-white'
                             : bookingDate
                               ? 'bg-green-600 border-green-600 text-white'
                               : 'border-gray-300 text-gray-400'
                             }`}>
                             {bookingDate ? (
-                              <CheckCircle className="w-6 h-6" />
+                              <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" />
                             ) : (
-                              <Calendar className="w-5 h-5" />
+                              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
                             )}
                           </div>
-                          <span className={`ml-2 text-sm font-medium ${bookingStep === 'calendar' || bookingDate ? 'text-gray-900' : 'text-gray-400'
+                          <span className={`ml-1 sm:ml-2 text-xs sm:text-sm font-medium hidden sm:inline ${bookingStep === 'calendar' || bookingDate ? 'text-gray-900' : 'text-gray-400'
                             }`}>
                             Fecha
                           </span>
                         </div>
 
                         {/* Connector */}
-                        <div className={`w-16 h-0.5 ${bookingDate ? 'bg-green-600' : 'bg-gray-300'
+                        <div className={`w-8 sm:w-16 h-0.5 ${bookingDate ? 'bg-green-600' : 'bg-gray-300'
                           }`} />
 
                         {/* Step 2 */}
                         <div className="flex items-center">
-                          <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'timeslot'
+                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-colors ${bookingStep === 'timeslot'
                             ? 'bg-blue-600 border-blue-600 text-white'
                             : bookingSlot
                               ? 'bg-green-600 border-green-600 text-white'
                               : 'border-gray-300 text-gray-400'
                             }`}>
                             {bookingSlot ? (
-                              <CheckCircle className="w-6 h-6" />
+                              <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6" />
                             ) : (
-                              <Clock className="w-5 h-5" />
+                              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                             )}
                           </div>
-                          <span className={`ml-2 text-sm font-medium ${bookingStep === 'timeslot' || bookingSlot ? 'text-gray-900' : 'text-gray-400'
+                          <span className={`ml-1 sm:ml-2 text-xs sm:text-sm font-medium hidden sm:inline ${bookingStep === 'timeslot' || bookingSlot ? 'text-gray-900' : 'text-gray-400'
                             }`}>
                             Horario
                           </span>
                         </div>
 
                         {/* Connector */}
-                        <div className={`w-16 h-0.5 ${bookingSlot ? 'bg-green-600' : 'bg-gray-300'
+                        <div className={`w-8 sm:w-16 h-0.5 ${bookingSlot ? 'bg-green-600' : 'bg-gray-300'
                           }`} />
 
                         {/* Step 3 */}
                         <div className="flex items-center">
-                          <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${bookingStep === 'form'
+                          <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-colors ${bookingStep === 'form'
                             ? 'bg-blue-600 border-blue-600 text-white'
                             : 'border-gray-300 text-gray-400'
                             }`}>
-                            <CheckCircle className="w-5 h-5" />
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
-                          <span className={`ml-2 text-sm font-medium ${bookingStep === 'form' ? 'text-gray-900' : 'text-gray-400'
+                          <span className={`ml-1 sm:ml-2 text-xs sm:text-sm font-medium hidden sm:inline ${bookingStep === 'form' ? 'text-gray-900' : 'text-gray-400'
                             }`}>
                             Confirmar
                           </span>
@@ -957,7 +1024,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                   )}
 
                   {/* Contenido del Modal */}
-                  <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-6">
+                  <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-4 sm:p-6">
                     {/* Step 1: Calendario */}
                     {bookingStep === 'calendar' && (
                       <motion.div

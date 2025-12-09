@@ -1,44 +1,22 @@
-# compiled output
-/dist
+# ============================================
+# Dependencies
+# ============================================
 /node_modules
+/dist
 /build
-
-# Logs
-logs
-*.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# OS
-.DS_Store
-
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# dotenv environment variable files (NUNCA versionar archivos con credenciales)
+# ============================================
+# Environment Variables (CRITICAL - NEVER COMMIT)
+# ============================================
 .env
-.env.*
-!.env.example
 .env.local
 .env.development
 .env.development.local
@@ -47,44 +25,121 @@ lerna-debug.log*
 .env.production
 .env.production.local
 .env.*.local
+.env.*
+!.env.example
 
-# Archivos de configuración sensibles
-config/database.json
-config/secrets.json
-
-# Uploads directory (archivos subidos por usuarios)
-/uploads/*
-!uploads/.gitkeep
-
-# temp directory
-.temp
-.tmp
-
-# Runtime data
+# ============================================
+# Logs & Runtime
+# ============================================
+logs/
+*.log
+lerna-debug.log*
 pids
 *.pid
 *.seed
 *.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# ============================================
+# Tests & Coverage
+# ============================================
+/coverage
+/.nyc_output
+/test-results
+/playwright-report
+.jest-cache
+
+# ============================================
+# Uploads & User Files
+# ============================================
+/uploads/*
+!/uploads/.gitkeep
+/uploads/avatar/*
+/uploads/document/*
+/uploads/image/*
+/uploads/provider_image/*
+/uploads/provider_logo/*
+/uploads/service_image/*
+!/uploads/avatar/.gitkeep
+!/uploads/document/.gitkeep
+!/uploads/image/.gitkeep
+!/uploads/provider_image/.gitkeep
+!/uploads/provider_logo/.gitkeep
+!/uploads/service_image/.gitkeep
+
+# ============================================
 # Prisma
+# ============================================
 /generated/prisma
+.prisma/
 
-# Docker
-.dockerignore
-Dockerfile.dev
+# ============================================
+# Database & Sensitive Config
+# ============================================
+config/database.json
+config/secrets.json
+*.db
+*.sqlite
+*.sqlite3
 
-# Backup files
+# ============================================
+# Temp Files
+# ============================================
+.temp
+.tmp
+*.tmp
 *.backup
 *.bak
 *.tmp~
+*.swp
+*.swo
+*~
 
+# ============================================
+# IDEs & Editors
+# ============================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Other IDEs
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+.metadata
+
+# ============================================
+# Operating Systems
+# ============================================
 # MacOS
 .DS_Store
+.DS_Store?
 .AppleDouble
 .LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
 
 # Windows
 Thumbs.db
@@ -100,3 +155,37 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Docker
+# ============================================
+.dockerignore
+docker-compose.override.yml
+
+# ============================================
+# Cache & Build
+# ============================================
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.webpack/
+
+# ============================================
+# Sentry
+# ============================================
+.sentryclirc
+.sentry-*
+
+# ============================================
+# Husky (keep hooks in repo)
+# ============================================
+# Only ignore if needed
+# .husky/_

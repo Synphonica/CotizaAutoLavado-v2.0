@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL + '/api' || "http://localhost:4000/api";
 
 // Función para obtener el token de Clerk (server-side)
 async function getClerkToken(): Promise<string | null> {

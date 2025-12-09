@@ -1,0 +1,29 @@
+# Node.js
+node_modules/
+dist/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+
+# Output files
+output/
+*.log
+*.xlsx
+*.csv
+*.json
+*.sql
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db

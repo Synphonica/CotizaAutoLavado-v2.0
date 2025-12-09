@@ -70,7 +70,11 @@ export function useApi() {
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
-                    const res = await fetch(`${API_BASE}${path}`, {
+                    // Limpiar la URL para evitar dobles barras
+                    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                    const url = `${API_BASE}${cleanPath}`.replace(/([^:])\/{2,}/g, '$1/');
+
+                    const res = await fetch(url, {
                         ...fetchOptions,
                         headers,
                         body: data ? JSON.stringify(data) : fetchOptions.body,
@@ -96,6 +100,12 @@ export function useApi() {
                             errorData.message || `Request failed: ${res.status}`,
                             errorData
                         );
+
+                        // No reintentar errores de autenticación (401, 403)
+                        if (res.status === 401 || res.status === 403) {
+                            console.warn(`[useApi] Authentication error (${res.status}) for ${path}`);
+                            throw apiError;
+                        }
 
                         // Reintentar en casos específicos
                         if (res.status === 429 || res.status === 503 || res.status >= 500) {

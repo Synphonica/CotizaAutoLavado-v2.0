@@ -25,7 +25,7 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { QueryUsersDto } from '../dto/query-users.dto';
 import { UpdateUserStatusDto } from '../dto/update-user-status.dto';
 import { UserResponseDto, UserListResponseDto } from '../dto/user-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -33,7 +33,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
@@ -112,7 +112,7 @@ export class UsersController {
     description: 'No autorizado',
   })
   async getProfile(@CurrentUser() user: any): Promise<UserResponseDto> {
-    return this.usersService.findOne(user.id);
+    return this.usersService.findByClerkId(user.clerkId);
   }
 
   @Get(':id')
@@ -152,7 +152,7 @@ export class UsersController {
     @CurrentUser() user: any,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    return this.usersService.update(user.id, updateUserDto);
+    return this.usersService.updateByClerkId(user.clerkId, updateUserDto);
   }
 
   @Patch(':id')

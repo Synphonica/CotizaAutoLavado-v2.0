@@ -92,125 +92,125 @@ export function ServiceCard({ item, index = 0 }: ServiceCardProps) {
             whileHover={{ y: -5, scale: 1.02 }}
             className="group"
         >
-            <Link href={`/services/${item.id}`}>
-                <Card className="h-full overflow-hidden border-2 border-emerald-100 shadow-lg hover:shadow-2xl hover:shadow-emerald-100/50 transition-all duration-300 bg-gradient-to-br from-white to-emerald-50/30">
-                    {/* Imagen del servicio */}
-                    {mainImage && (
-                        <div className="relative h-48 bg-gray-200 overflow-hidden">
-                            <Image
-                                src={getImageUrl(mainImage)}
-                                alt={item.name}
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            {item.discount && (
-                                <div className="absolute top-3 left-3">
-                                    <Badge className="bg-[#FFD166] text-[#073642] hover:bg-[#FFD166]/90 font-semibold shadow-lg">
-                                        <Percent className="h-3 w-3 mr-1" />
-                                        -{item.discount}%
-                                    </Badge>
-                                </div>
-                            )}
-                            {isAuthenticated && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white"
-                                    onClick={toggleFavorite}
-                                    disabled={isLoadingFavorite}
-                                >
-                                    <Heart
-                                        className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'
-                                            }`}
-                                    />
-                                </Button>
+            <Card className="h-full overflow-hidden border-2 border-emerald-100 shadow-lg hover:shadow-2xl hover:shadow-emerald-100/50 transition-all duration-300 bg-gradient-to-br from-white to-emerald-50/30">
+                {/* Imagen del servicio */}
+                {mainImage && (
+                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                        <Image
+                            src={getImageUrl(mainImage)}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {item.discount && (
+                            <div className="absolute top-3 left-3">
+                                <Badge className="bg-[#FFD166] text-[#073642] hover:bg-[#FFD166]/90 font-semibold shadow-lg">
+                                    <Percent className="h-3 w-3 mr-1" />
+                                    -{item.discount}%
+                                </Badge>
+                            </div>
+                        )}
+                        {isAuthenticated && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white"
+                                onClick={toggleFavorite}
+                                disabled={isLoadingFavorite}
+                            >
+                                <Heart
+                                    className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                                        }`}
+                                />
+                            </Button>
+                        )}
+                    </div>
+                )}
+
+                <CardContent className="p-6 flex-1">
+                    <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-lg text-[#073642] group-hover:text-[#0F9D58] transition-colors line-clamp-2">
+                                {item.name}
+                            </h3>
+                            {item.category && (
+                                <Badge variant="secondary" className="mt-1 bg-emerald-100 text-[#0F9D58] border-emerald-200">
+                                    {item.category}
+                                </Badge>
                             )}
                         </div>
+                    </div>
+
+                    {item.description && (
+                        <p className="text-sm text-[#073642]/70 mb-3 line-clamp-2">
+                            {item.description}
+                        </p>
                     )}
 
-                    <CardContent className="p-6 flex-1">
-                        <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg text-[#073642] group-hover:text-[#0F9D58] transition-colors line-clamp-2">
-                                    {item.name}
-                                </h3>
-                                {item.category && (
-                                    <Badge variant="secondary" className="mt-1 bg-emerald-100 text-[#0F9D58] border-emerald-200">
-                                        {item.category}
-                                    </Badge>
-                                )}
-                            </div>
+                    <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-[#073642]/80">
+                            <MapPin className="h-4 w-4 text-[#0F9D58]" />
+                            <span className="font-medium">{item.provider.businessName}</span>
                         </div>
 
-                        {item.description && (
-                            <p className="text-sm text-[#073642]/70 mb-3 line-clamp-2">
-                                {item.description}
-                            </p>
+                        {(item.provider.city || item.provider.region) && (
+                            <div className="flex items-center gap-1 text-xs text-gray-500 ml-6">
+                                {item.provider.city && (
+                                    <span>{item.provider.city}</span>
+                                )}
+                                {item.provider.city && item.provider.region && (
+                                    <span>•</span>
+                                )}
+                                {item.provider.region && (
+                                    <span>{item.provider.region}</span>
+                                )}
+                            </div>
                         )}
 
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 text-sm text-[#073642]/80">
-                                <MapPin className="h-4 w-4 text-[#0F9D58]" />
-                                <span className="font-medium">{item.provider.businessName}</span>
+                        {item.rating && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-1">
+                                    <Star className="h-4 w-4 fill-[#FFD166] text-[#FFD166]" />
+                                    <span className="font-medium">{item.rating.toFixed(1)}</span>
+                                </div>
                             </div>
+                        )}
 
-                            {(item.provider.city || item.provider.region) && (
-                                <div className="flex items-center gap-1 text-xs text-gray-500 ml-6">
-                                    {item.provider.city && (
-                                        <span>{item.provider.city}</span>
-                                    )}
-                                    {item.provider.city && item.provider.region && (
-                                        <span>•</span>
-                                    )}
-                                    {item.provider.region && (
-                                        <span>{item.provider.region}</span>
-                                    )}
-                                </div>
-                            )}
+                        {item.duration && (
+                            <div className="flex items-center gap-2 text-sm text-[#073642]/80">
+                                <Clock className="h-4 w-4 text-[#2B8EAD]" />
+                                <span>{item.duration} min</span>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
 
-                            {item.rating && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <div className="flex items-center gap-1">
-                                        <Star className="h-4 w-4 fill-[#FFD166] text-[#FFD166]" />
-                                        <span className="font-medium">{item.rating.toFixed(1)}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {item.duration && (
-                                <div className="flex items-center gap-2 text-sm text-[#073642]/80">
-                                    <Clock className="h-4 w-4 text-[#2B8EAD]" />
-                                    <span>{item.duration} min</span>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="px-6 pb-6 pt-0">
-                        <div className="w-full flex items-center justify-between">
-                            <div className="flex flex-col">
-                                {item.discount ? (
-                                    <>
-                                        <span className="text-sm text-[#073642]/50 line-through">
-                                            {formatPrice(item.price)}
-                                        </span>
-                                        <span className="text-xl font-bold text-[#0F9D58]">
-                                            {formatPrice(discountedPrice)}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-xl font-bold text-[#073642]">
+                <CardFooter className="px-6 pb-6 pt-0">
+                    <div className="w-full flex items-center justify-between">
+                        <div className="flex flex-col">
+                            {item.discount ? (
+                                <>
+                                    <span className="text-sm text-[#073642]/50 line-through">
                                         {formatPrice(item.price)}
                                     </span>
-                                )}
-                            </div>
+                                    <span className="text-xl font-bold text-[#0F9D58]">
+                                        {formatPrice(discountedPrice)}
+                                    </span>
+                                </>
+                            ) : (
+                                <span className="text-xl font-bold text-[#073642]">
+                                    {formatPrice(item.price)}
+                                </span>
+                            )}
+                        </div>
+                        <Link href={`/services/${item.id}`}>
                             <Button className="bg-[#FFD166] hover:bg-[#FFD166]/90 text-[#073642] font-semibold shadow-lg shadow-[#FFD166]/30 transition-all">
                                 Ver detalles
                             </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-            </Link>
+                        </Link>
+                    </div>
+                </CardFooter>
+            </Card>
         </motion.div>
     );
 }

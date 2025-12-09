@@ -13,12 +13,13 @@ import { SearchModule } from './search/search.module';
 import { HealthModule } from './health/health.module';
 import { ComparisonModule } from './comparison/comparison.module';
 import { MapsModule } from './maps/maps.module';
-import { IaModule } from './ia/ia.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadModule } from './upload/upload.module';
 import { EmailModule } from './email/email.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PriceAlertsModule } from './price-alerts/price-alerts.module';
+import { AiModule } from './ai/ai.module';
+import { AiInsightsModule } from './ai/ai-insights.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -53,12 +54,13 @@ import { ScheduleModule } from '@nestjs/schedule';
     HealthModule,
     ComparisonModule,
     MapsModule,
-    IaModule,
     AnalyticsModule,
     UploadModule,
     EmailModule,
     BookingsModule,
     PriceAlertsModule,
+    AiModule,
+    AiInsightsModule,
   ],
   controllers: [],
   providers: [],

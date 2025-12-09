@@ -27,7 +27,7 @@ import { QueryServicesDto } from '../dto/query-services.dto';
 import { UpdateServiceStatusDto } from '../dto/update-service-status.dto';
 import { ServicesByProviderDto } from '../dto/services-by-provider.dto';
 import { ServiceResponseDto, ServiceListResponseDto } from '../dto/service-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -36,7 +36,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('services')
 @Controller('services')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) { }
@@ -100,6 +100,26 @@ export class ServicesController {
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   async findAll(@Query() queryDto: QueryServicesDto): Promise<ServiceListResponseDto> {
     return this.servicesService.findAll(queryDto);
+  }
+
+  /**
+   * Obtener los servicios del proveedor autenticado
+   */
+  @Get('my-services')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PROVIDER)
+  @ApiOperation({
+    summary: 'Obtener mis servicios',
+    description: 'Obtiene todos los servicios del proveedor autenticado'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de servicios del proveedor obtenida exitosamente',
+    type: [ServiceResponseDto]
+  })
+  @ApiResponse({ status: 404, description: 'Proveedor no encontrado' })
+  async findMyServices(@CurrentUser() user: any): Promise<ServiceResponseDto[]> {
+    return this.servicesService.findMyServices(user.clerkId);
   }
 
   /**

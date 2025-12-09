@@ -1,25 +1,25 @@
 import {
-    Controller,
-    Post,
-    Body,
-    UseGuards,
-    HttpCode,
-    HttpStatus,
-  } from '@nestjs/common';
-  import {
-    ApiTags,
-    ApiOperation,
-    ApiResponse,
-    ApiBody,
-  } from '@nestjs/swagger';
-  import { AuthService } from '../services/auth.service';
-  import { Public } from '../decorators/public.decorator';
-  
-  @ApiTags('auth')
-  @Controller('auth/clerk')
-  export class ClerkController {
-    constructor(private readonly authService: AuthService) {}
-  
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+} from '@nestjs/swagger';
+import { AuthService } from '../services/auth.service';
+import { Public } from '../decorators/public.decorator';
+
+@ApiTags('auth')
+@Controller('auth/clerk')
+export class ClerkController {
+  constructor(private readonly authService: AuthService) { }
+
   @Post('webhook')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -70,32 +70,37 @@ import {
       };
     }
   }
-  
-    @Post('sync-user')
-    @Public()
-    @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Sincronizar usuario con Clerk' })
-    @ApiBody({
-      schema: {
-        type: 'object',
-        properties: {
-          clerkId: { type: 'string' },
-          userData: { type: 'object' },
-        },
+
+  @Post('sync-user')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sincronizar usuario con Clerk' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        clerkId: { type: 'string' },
+        userData: { type: 'object' },
       },
-    })
-    @ApiResponse({
-      status: 200,
-      description: 'Usuario sincronizado exitosamente',
-    })
-    async syncUser(
-      @Body('clerkId') clerkId: string,
-      @Body('userData') userData: any,
-    ) {
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario sincronizado exitosamente',
+  })
+  async syncUser(
+    @Body('clerkId') clerkId: string,
+    @Body('userData') userData: any,
+  ) {
+    try {
       const user = await this.authService.syncWithClerk(clerkId, userData);
       return {
         message: 'Usuario sincronizado exitosamente',
         user,
       };
+    } catch (error) {
+      console.error('Error en syncUser endpoint:', error);
+      throw error;
     }
   }
+}

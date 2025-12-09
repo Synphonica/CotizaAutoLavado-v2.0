@@ -5,6 +5,9 @@ export class UserResponseDto {
     @ApiProperty()
     id: string;
 
+    @ApiProperty({ required: false })
+    clerkId?: string;
+
     @ApiProperty()
     email: string;
 

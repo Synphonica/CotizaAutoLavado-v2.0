@@ -88,7 +88,7 @@ async function bootstrap() {
 
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Alto Carwash API ejecutándose en: http://localhost:${port}`);
-  console.log(`📚 Documentación Swagger: http://localhost:${port}/api/docs`);
+  console.log(`🤖 IA powered by Google Gemini`);
 }
 
 bootstrap().catch((error) => {

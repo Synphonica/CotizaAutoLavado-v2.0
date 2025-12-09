@@ -46,10 +46,11 @@ export function useClerkSync() {
                 // Obtener el rol del parámetro de URL o localStorage
                 const roleFromUrl = searchParams?.get('role');
                 const roleFromStorage = typeof window !== 'undefined' ? localStorage.getItem('selectedRole') : null;
-                const role = roleFromUrl || roleFromStorage || 'USER';
+                const role = roleFromUrl || roleFromStorage || 'CUSTOMER';
 
                 // Sincronizar con backend
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/clerk/sync-user`, {
+                const apiUrl = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL + '/api' || 'http://localhost:4000/api';
+                const response = await fetch(`${apiUrl}/auth/clerk/sync-user`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

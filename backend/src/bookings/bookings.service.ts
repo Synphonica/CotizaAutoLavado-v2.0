@@ -23,8 +23,13 @@ export class BookingsService {
             throw new NotFoundException('Proveedor no encontrado');
         }
 
-        if (provider.status !== 'ACTIVE') {
-            throw new BadRequestException('El proveedor no está activo');
+        // Verificar que el proveedor está verificado o activo Y acepta bookings
+        if (provider.status !== 'VERIFIED' && provider.status !== 'ACTIVE') {
+            throw new BadRequestException('El proveedor no está activo o verificado');
+        }
+
+        if (!provider.acceptsBookings) {
+            throw new BadRequestException('El proveedor no acepta reservas en este momento');
         }
 
         // Validar que el servicio existe
@@ -54,12 +59,22 @@ export class BookingsService {
         // Crear la reserva
         const booking = await this.prisma.booking.create({
             data: {
-                ...createBookingDto,
+                userId: createBookingDto.userId,
+                providerId: createBookingDto.providerId,
+                serviceId: createBookingDto.serviceId,
                 bookingDate: new Date(createBookingDto.bookingDate),
                 startTime: new Date(createBookingDto.startTime),
                 endTime: new Date(createBookingDto.endTime),
+                customerName: createBookingDto.customerName,
+                customerPhone: createBookingDto.customerPhone,
+                customerEmail: createBookingDto.customerEmail,
+                vehicleInfo: createBookingDto.vehicleInfo as any,
+                serviceName: createBookingDto.serviceName,
+                serviceDuration: createBookingDto.serviceDuration,
                 totalPrice: createBookingDto.totalPrice,
                 currency: createBookingDto.currency || 'CLP',
+                customerNotes: createBookingDto.customerNotes,
+                status: 'PENDING',
             },
         });
 
@@ -87,18 +102,99 @@ export class BookingsService {
             if (filters.endDate) where.bookingDate.lte = new Date(filters.endDate);
         }
 
-        return this.prisma.booking.findMany({
+        const bookings = await this.prisma.booking.findMany({
             where,
-            orderBy: { bookingDate: 'asc' },
+            include: {
+                user: filters.userId ? {
+                    select: {
+                        id: true,
+                        clerkId: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                } : false,
+                service: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        price: true,
+                        duration: true,
+                        type: true,
+                    },
+                },
+                provider: {
+                    select: {
+                        id: true,
+                        businessName: true,
+                        phone: true,
+                        email: true,
+                        address: true,
+                        city: true,
+                        region: true,
+                        latitude: true,
+                        longitude: true,
+                    },
+                },
+            },
+            orderBy: { bookingDate: 'desc' },
         });
+
+        return { bookings };
     }
 
     /**
      * Obtener una reserva por ID
      */
     async findOne(id: string) {
+        // Primero obtenemos la reserva para verificar si tiene userId
+        const bookingCheck = await this.prisma.booking.findUnique({
+            where: { id },
+            select: { userId: true },
+        });
+
+        if (!bookingCheck) {
+            throw new NotFoundException('Reserva no encontrada');
+        }
+
+        // Construir el include dinámicamente
+        const includeConfig: any = {
+            service: {
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    price: true,
+                    duration: true,
+                    type: true,
+                },
+            },
+            provider: {
+                select: {
+                    id: true,
+                    businessName: true,
+                    phone: true,
+                    email: true,
+                    address: true,
+                    city: true,
+                    region: true,
+                    latitude: true,
+                    longitude: true,
+                },
+            },
+        };
+
+        // Solo incluir user si existe userId
+        if (bookingCheck.userId) {
+            includeConfig.user = true;
+        }
+
+        // Hacer el query completo con include condicional de user
         const booking = await this.prisma.booking.findUnique({
             where: { id },
+            include: includeConfig,
         });
 
         if (!booking) {
@@ -372,5 +468,35 @@ export class BookingsService {
      */
     async remove(id: string) {
         return this.cancel(id, 'Eliminada por el usuario');
+    }
+
+    /**
+     * Obtener proveedor por userId (clerkId)
+     */
+    async getProviderByUserId(clerkId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { clerkId },
+            include: { providerProfile: true },
+        });
+        return user?.providerProfile || null;
+    }
+
+    /**
+     * Verificar que el proveedor sea dueño de la reserva
+     */
+    async verifyBookingOwnership(bookingId: string, providerId: string) {
+        const booking = await this.prisma.booking.findUnique({
+            where: { id: bookingId },
+        });
+
+        if (!booking) {
+            throw new NotFoundException('Reserva no encontrada');
+        }
+
+        if (booking.providerId !== providerId) {
+            throw new BadRequestException('No tienes permiso para modificar esta reserva');
+        }
+
+        return booking;
     }
 }

@@ -26,7 +26,7 @@ import { QueryNotificationsDto } from '../dto/query-notifications.dto';
 import { NotificationsByUserDto } from '../dto/notifications-by-user.dto';
 import { MarkAsReadDto, MarkAllAsReadDto } from '../dto/mark-as-read.dto';
 import { NotificationResponseDto } from '../dto/notification-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
@@ -35,7 +35,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('notifications')
 @Controller('notifications')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(ClerkAuthGuard, RolesGuard)
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) { }
 

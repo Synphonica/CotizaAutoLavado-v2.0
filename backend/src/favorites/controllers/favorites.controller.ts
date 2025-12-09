@@ -25,7 +25,7 @@ import { QueryFavoritesDto } from '../dto/query-favorites.dto';
 import { FavoritesByUserDto } from '../dto/favorites-by-user.dto';
 import { FavoritesByProviderDto } from '../dto/favorites-by-provider.dto';
 import { FavoriteResponseDto } from '../dto/favorite-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
@@ -34,7 +34,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('favorites')
 @Controller('favorites')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(ClerkAuthGuard, RolesGuard)
 export class FavoritesController {
     constructor(private readonly favoritesService: FavoritesService) { }
 

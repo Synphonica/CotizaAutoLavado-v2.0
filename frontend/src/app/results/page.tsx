@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Star, MapPin, Clock, Percent, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import { SearchResultsSkeleton } from "@/components/ui/loading-skeletons";
+import { useAuth } from "@clerk/nextjs";
 
 // Backend response types
 interface BackendSearchResult {
@@ -75,7 +77,7 @@ function transformToServiceItem(backendResult: BackendSearchResult): ServiceItem
   };
 }
 
-async function fetchResults(q: string | undefined, page: number = 1, limit: number = 20, region?: string, city?: string) {
+async function fetchResults(q: string | undefined, page: number = 1, limit: number = 20, region?: string, city?: string, token?: string | null) {
   try {
     console.log(`🔍 Fetching results from backend API... (page ${page})`);
 
@@ -92,7 +94,7 @@ async function fetchResults(q: string | undefined, page: number = 1, limit: numb
 
     console.log(`📡 Request URL: ${url}`);
 
-    const data = await apiGet<BackendSearchResponse>(url);
+    const data = await apiGet<BackendSearchResponse>(url, { token });
     console.log('✅ Backend response:', data);
     return data;
   } catch (error) {
@@ -102,6 +104,7 @@ async function fetchResults(q: string | undefined, page: number = 1, limit: numb
 }
 
 export default function Results({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { getToken } = useAuth();
   const [sp, setSp] = useState<{ q?: string }>({});
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<ServiceItem[]>([]);
@@ -127,11 +130,12 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
     const loadLocations = async () => {
       try {
         console.log('🔍 Cargando ubicaciones globales...');
+        const token = await getToken();
         const data = await apiGet<{
           regions: string[];
           cities: string[];
           regionCityMap: Record<string, string[]>;
-        }>('/search/locations');
+        }>('/search/locations', { token });
         console.log('✅ Ubicaciones cargadas:', data);
         setAvailableRegions(data.regions);
         setAvailableCities(data.cities);
@@ -141,7 +145,7 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
       }
     };
     loadLocations();
-  }, []);
+  }, [getToken]);
 
   // Extraer ubicaciones de los items como fallback
   useEffect(() => {
@@ -186,7 +190,8 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
         setError(null);
         const params = await searchParams;
         setSp(params);
-        const response = await fetchResults(params?.q, currentPage, limit, selectedRegion, selectedCity);
+        const token = await getToken();
+        const response = await fetchResults(params?.q, currentPage, limit, selectedRegion, selectedCity, token);
         const transformedItems = response.results.map(transformToServiceItem);
         setItems(transformedItems);
         setTotalPages(response.totalPages);
@@ -203,7 +208,7 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
       }
     };
     loadData();
-  }, [searchParams, currentPage, limit, selectedRegion, selectedCity]);
+  }, [searchParams, currentPage, limit, selectedRegion, selectedCity, getToken]);
 
   // Aplicar filtros y ordenamiento LOCALES (no región/ciudad, esos van al backend)
   useEffect(() => {
@@ -320,11 +325,7 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
               </div>
 
               {loading ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-64 bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-lg animate-pulse border border-emerald-100" />
-                  ))}
-                </div>
+                <SearchResultsSkeleton count={6} />
               ) : error ? (
                 <Card className="p-12 text-center border-red-200 bg-red-50">
                   <CardContent>

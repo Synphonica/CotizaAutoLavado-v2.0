@@ -29,7 +29,7 @@ import { UpdateReviewStatusDto } from '../dto/update-review-status.dto';
 import { ReviewsByProviderDto } from '../dto/reviews-by-provider.dto';
 import { ReviewsByUserDto } from '../dto/reviews-by-user.dto';
 import { ReviewResponseDto } from '../dto/review-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
@@ -38,7 +38,7 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('reviews')
 @Controller('reviews')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(ClerkAuthGuard, RolesGuard)
 export class ReviewsController {
     constructor(private readonly reviewsService: ReviewsService) { }
 

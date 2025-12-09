@@ -46,7 +46,7 @@ export default function Home() {
                   <div className="w-14 h-14 bg-gradient-to-br from-[#0F9D58] to-[#2B8EAD] rounded-2xl flex items-center justify-center shadow-lg">
                     <Droplets className="h-7 w-7 text-white" />
                   </div>
-                  <span className="text-2xl font-bold text-[#073642] dark:text-white tracking-wider">ALTO CARWASH</span>
+                  <span className="text-2xl font-bold text-[#073642] dark:text-white tracking-wider">Cotiza Auto Lavado</span>
                 </div>
 
                 {/* Main Headline */}

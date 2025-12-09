@@ -1,0 +1,72 @@
+// This file configures the initialization of Sentry on the client.
+// The added config here will be used whenever a users loads a page in their browser.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "https://91d693ad8f0eb735d913c0e755b9a102@o4510428851535872.ingest.us.sentry.io/4510428856254464",
+
+  // Environment
+  environment: process.env.NODE_ENV || 'development',
+
+  // Add optional integrations for additional features
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+    Sentry.browserTracingIntegration(),
+  ],
+
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+
+  // Define how likely Replay events are sampled.
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // Define how likely Replay events are sampled when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+
+  // Enable sending user PII (Personally Identifiable Information)
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: false,
+
+  // Before send hook to filter sensitive data
+  beforeSend(event, hint) {
+    // Filter sensitive headers
+    if (event.request?.headers) {
+      delete event.request.headers['authorization'];
+      delete event.request.headers['cookie'];
+    }
+
+    // Filter sensitive data from extra context
+    if (event.extra) {
+      const sensitiveFields = ['password', 'token', 'secret', 'apiKey'];
+      sensitiveFields.forEach(field => {
+        if (event.extra?.[field]) {
+          event.extra[field] = '[REDACTED]';
+        }
+      });
+    }
+
+    return event;
+  },
+
+  // Ignore certain errors
+  ignoreErrors: [
+    'Network request failed',
+    'Failed to fetch',
+    'NetworkError',
+    'Non-Error promise rejection',
+    'ResizeObserver loop limit exceeded',
+    'Multiple Sentry Session Replay instances',
+  ],
+});
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

@@ -1,186 +1,33 @@
-# ===== ARCHIVOS DEL SISTEMA OPERATIVO =====
-# macOS
+# ============================================
+# Root .gitignore - AltoCarWash Project
+# ============================================
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.docker.example
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# OS
 .DS_Store
-.AppleDouble
-.LSOverride
-.Spotlight-V100
-.Trashes
-
-# Windows
 Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
+*.log
 
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-
-# ===== IDEs Y EDITORES =====
-# VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# JetBrains IDEs
+# IDE
+.vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
+# Node
+node_modules/
 
-# ===== ARCHIVOS TEMPORALES =====
-# Logs generales
+# Logs
+logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Archivos temporales
-*.tmp
-*.temp
-*.backup
-*.bak
-*.swp
-*.swo
-*~
-
-# ===== DOCKER =====
-# Docker override files
-docker-compose.override.yml
-docker-compose.dev.yml
-docker-compose.local.yml
-
-# ===== DOCUMENTACIÓN TEMPORAL =====
-# Documentos de trabajo
-*.draft.md
-*.wip.md
-TODO.md
-NOTES.md
-
-# ===== ARCHIVOS DE CONFIGURACIÓN SENSIBLES =====
-# Variables de entorno globales
-.env
-.env.local
-.env.production
-.env.staging
-
-# Configuraciones sensibles
-config/secrets.json
-config/database.json
-*.pem
-*.key
-*.crt
-
-# ===== DIRECTORIOS DE DEPENDENCIAS =====
-# No ignoramos node_modules aquí porque cada subproyecto 
-# tiene su propio .gitignore que lo maneja
-
-# ===== ARCHIVOS DE BUILD GLOBALES =====
-dist/
-build/
-out/
-
-# ===== OTROS =====
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# Cache directories
-.cache/
-.parcel-cache/
-.eslintcache
-
-# Archivos problemáticos de Windows
-NUL
-CON
-PRN
-AUX
-# ===== DOCUMENTACIÓN PRIVADA =====
-# Documentación interna no pública
-docs/
-
-# ===== DOCUMENTACION PRIVADA =====
-# Documentacion interna no publica
-docs/
-
-# ===== SCRAPER PRIVADO =====
-# Scripts de scraping no públicos
-scraper/
-
-# ===== DOCUMENTACIÓN DE DESARROLLO INTERNA =====
-# Documentos de proceso interno
-CONSOLIDACION_ENV.md
-DEPLOYMENT.md
-DIA_*.md
-ERRORES_RESUELTOS.md
-GUIA_ENV.md
-INSTALACION.md
-PROYECTO_README.md
-QUICK_START.md
-RESUMEN_*.md
-SECURITY.md
-*_RESUMEN.md
-
-# ===== SCRIPTS DE UTILIDAD =====
-# Scripts de desarrollo local
-check-connection.sh
-verify-clerk.js
-verify-connectivity.ps1
-mobile-diagnostics.*
-docker-compose.dev.yml
-
-# ===== ARCHIVOS DE DATOS =====
-# Archivos grandes de datos
-docs.zip
-historias_de_usuario.json
-historias_de_usuario.md
-
-# ===== SCRIPTS DE IMPORTACIÓN =====
-# Scripts de importación de datos (backend)
-backend/add-services.mjs
-backend/check-*.mjs
-backend/cleanup-and-convert.mjs
-backend/create-services.mjs
-backend/import-*.mjs
-backend/list-all.mjs
-backend/recreate-services.mjs
-
-# ===== DOCUMENTACIÓN REDUNDANTE =====
-# READMEs adicionales del backend
-backend/RESUMEN_ERRORES.md
-backend/SOLUCION_RLS_WARNING.md
-
-# ===== DOCUMENTACIÓN REDUNDANTE FRONTEND =====
-# Documentación interna del frontend
-frontend/CAMBIOS_API_REAL.md
-frontend/RESUMEN_CAMBIOS.md
-
-# Configuraciones de desarrollo local
-docker-compose.yml
-scripts/check-secrets.*

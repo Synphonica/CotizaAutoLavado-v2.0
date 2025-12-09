@@ -10,6 +10,7 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
@@ -17,13 +18,21 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { FilterBookingDto } from './dto/filter-booking.dto';
 import { CheckAvailabilityDto, RescheduleBookingDto } from './dto/booking-actions.dto';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Bookings')
 @Controller('bookings')
+@UseGuards(ClerkAuthGuard)
+@ApiBearerAuth()
 export class BookingsController {
     constructor(private readonly bookingsService: BookingsService) { }
 
     @Post()
+    @Public()
     @ApiOperation({ summary: 'Crear una nueva reserva' })
     @ApiResponse({ status: 201, description: 'Reserva creada exitosamente' })
     @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -36,7 +45,14 @@ export class BookingsController {
     @Get()
     @ApiOperation({ summary: 'Obtener todas las reservas con filtros' })
     @ApiResponse({ status: 200, description: 'Lista de reservas' })
-    findAll(@Query() filters: FilterBookingDto) {
+    async findAll(@Query() filters: FilterBookingDto, @Request() req: any) {
+        // Si el usuario es proveedor, filtrar por su providerId
+        if (req.user.role === UserRole.PROVIDER) {
+            const provider = await this.bookingsService.getProviderByUserId(req.user.clerkId);
+            if (provider) {
+                filters.providerId = provider.id;
+            }
+        }
         return this.bookingsService.findAll(filters);
     }
 
@@ -52,6 +68,7 @@ export class BookingsController {
     }
 
     @Get('availability/:providerId')
+    @Public()
     @ApiOperation({ summary: 'Verificar disponibilidad de horarios para una fecha (GET)' })
     @ApiResponse({ status: 200, description: 'Horarios disponibles' })
     getAvailability(
@@ -68,6 +85,7 @@ export class BookingsController {
     }
 
     @Post('check-availability')
+    @Public()
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Verificar disponibilidad de horarios para una fecha (POST)' })
     @ApiResponse({ status: 200, description: 'Horarios disponibles' })
@@ -87,7 +105,14 @@ export class BookingsController {
     @ApiOperation({ summary: 'Actualizar una reserva' })
     @ApiResponse({ status: 200, description: 'Reserva actualizada' })
     @ApiResponse({ status: 404, description: 'Reserva no encontrada' })
-    update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
+    async update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto, @Request() req: any) {
+        // Verificar permisos si es proveedor
+        if (req.user.role === UserRole.PROVIDER) {
+            const provider = await this.bookingsService.getProviderByUserId(req.user.clerkId);
+            if (provider) {
+                await this.bookingsService.verifyBookingOwnership(id, provider.id);
+            }
+        }
         return this.bookingsService.update(id, updateBookingDto);
     }
 

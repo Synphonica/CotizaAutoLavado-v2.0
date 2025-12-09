@@ -29,11 +29,6 @@ export default function Page() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-10">
       <div className="mb-6 text-center">
-        <p className="text-sm text-gray-600">
-          Registrándote como: <span className="font-semibold text-[#0F9D58]">
-            {role === 'PROVIDER' ? 'Proveedor' : 'Cliente'}
-          </span>
-        </p>
       </div>
       <SignUp 
         routing="path" 

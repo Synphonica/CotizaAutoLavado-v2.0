@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+import { ModernNavbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MapProviderContextProvider } from "@/contexts/MapProviderContext";
 import { AppProvider } from "@/lib/providers/app-provider";
@@ -11,6 +11,7 @@ import { ToastProvider } from "@/hooks/useToast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ClerkBackendSync } from "@/components/ClerkBackendSync";
 import { BackendConnectionToast } from "@/components/BackendConnectionToast";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

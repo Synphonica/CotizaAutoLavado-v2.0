@@ -172,6 +172,56 @@ export class UsersService {
   }
 
   /**
+   * Obtener un usuario por clerkId
+   */
+  async findByClerkId(clerkId: string): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { clerkId },
+      select: {
+        id: true,
+        clerkId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        status: true,
+        avatar: true,
+        dateOfBirth: true,
+        defaultLatitude: true,
+        defaultLongitude: true,
+        defaultAddress: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLoginAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    return this.mapUserToResponse(user);
+  }
+
+  /**
+   * Actualizar un usuario por clerkId
+   */
+  async updateByClerkId(clerkId: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+    // Primero buscar el usuario por clerkId
+    const user = await this.prisma.user.findUnique({
+      where: { clerkId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Actualizar usando el ID
+    return this.update(user.id, updateUserDto);
+  }
+
+  /**
    * Actualizar un usuario
    */
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
@@ -298,13 +348,15 @@ export class UsersService {
    * Obtener estadísticas de usuarios
    */
   async getStats(): Promise<any> {
-    const [total, active, inactive, customers, providers, admins] = await Promise.all([
+    const [total, active, inactive, customers, providers, admins, totalProviders] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
       this.prisma.user.count({ where: { status: UserStatus.INACTIVE } }),
       this.prisma.user.count({ where: { role: UserRole.CUSTOMER } }),
       this.prisma.user.count({ where: { role: UserRole.PROVIDER } }),
       this.prisma.user.count({ where: { role: UserRole.ADMIN } }),
+      // Contar proveedores desde la tabla Provider para obtener el número real de negocios
+      this.prisma.provider.count(),
     ]);
 
     return {
@@ -316,6 +368,8 @@ export class UsersService {
         providers,
         admins,
       },
+      // Agregar conteo real de proveedores desde la tabla Provider
+      totalProviderBusinesses: totalProviders,
     };
   }
 

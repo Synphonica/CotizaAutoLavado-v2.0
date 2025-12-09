@@ -117,7 +117,4 @@ All errors follow this format:
         },
         jsonDocumentUrl: '/api/docs-json', // OpenAPI JSON available at this endpoint
     });
-
-    console.log('📚 Swagger documentation available at: /api/docs');
-    console.log('📄 OpenAPI JSON available at: /api/docs-json');
 }

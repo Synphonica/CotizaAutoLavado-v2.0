@@ -117,7 +117,9 @@ export class ServicesService {
             facebook: true,
             twitter: true,
             rating: true,
-            reviewCount: true
+            reviewCount: true,
+            acceptsBookings: true,
+            status: true
           }
         }
       }
@@ -229,7 +231,9 @@ export class ServicesService {
               facebook: true,
               twitter: true,
               rating: true,
-              reviewCount: true
+              reviewCount: true,
+            acceptsBookings: true,
+            status: true
             }
           }
         },
@@ -267,6 +271,59 @@ export class ServicesService {
   }
 
   /**
+   * Obtener los servicios del proveedor autenticado
+   */
+  async findMyServices(clerkId: string): Promise<ServiceResponseDto[]> {
+    // Buscar el proveedor del usuario
+    const provider = await this.prisma.provider.findFirst({
+      where: {
+        user: {
+          clerkId: clerkId
+        }
+      }
+    });
+
+    if (!provider) {
+      throw new NotFoundException('No se encontró un perfil de proveedor para este usuario');
+    }
+
+    // Obtener todos los servicios del proveedor
+    const services = await this.prisma.service.findMany({
+      where: {
+        providerId: provider.id,
+        deletedAt: null
+      },
+      include: {
+        provider: {
+          select: {
+            id: true,
+            businessName: true,
+            businessType: true,
+            city: true,
+            region: true,
+            address: true,
+            phone: true,
+            email: true,
+            website: true,
+            instagram: true,
+            facebook: true,
+            twitter: true,
+            rating: true,
+            reviewCount: true,
+            acceptsBookings: true,
+            status: true
+          }
+        }
+      },
+      orderBy: {
+        displayOrder: 'asc'
+      }
+    });
+
+    return services.map(service => this.mapServiceToResponse(service));
+  }
+
+  /**
    * Obtener un servicio por ID
    */
   async findOne(id: string): Promise<ServiceResponseDto> {
@@ -291,7 +348,9 @@ export class ServicesService {
             facebook: true,
             twitter: true,
             rating: true,
-            reviewCount: true
+            reviewCount: true,
+            acceptsBookings: true,
+            status: true
           }
         }
       }
@@ -355,7 +414,9 @@ export class ServicesService {
               facebook: true,
               twitter: true,
               rating: true,
-              reviewCount: true
+              reviewCount: true,
+            acceptsBookings: true,
+            status: true
             }
           }
         },
@@ -486,7 +547,9 @@ export class ServicesService {
             city: true,
             region: true,
             rating: true,
-            reviewCount: true
+            reviewCount: true,
+            acceptsBookings: true,
+            status: true
           }
         }
       }
@@ -513,7 +576,9 @@ export class ServicesService {
             city: true,
             region: true,
             rating: true,
-            reviewCount: true
+            reviewCount: true,
+            acceptsBookings: true,
+            status: true
           }
         }
       }
@@ -657,3 +722,4 @@ export class ServicesService {
     };
   }
 }
+

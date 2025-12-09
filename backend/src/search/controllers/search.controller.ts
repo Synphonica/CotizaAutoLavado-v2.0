@@ -22,12 +22,12 @@ import { SearchResponseDto } from '../dto/search-response.dto';
 import { SearchSuggestionsDto, SearchSuggestionDto } from '../dto/search-suggestions.dto';
 import { NearbySearchDto } from '../dto/nearby-search.dto';
 import { SearchResultDto } from '../dto/search-result.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { Public } from '../../auth/decorators/public.decorator';
 
 @ApiTags('search')
 @Controller('search')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 export class SearchController {
   constructor(private readonly searchService: SearchService) { }
 

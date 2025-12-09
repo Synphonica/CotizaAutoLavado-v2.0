@@ -1,11 +1,7 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateAuthDto } from '../dto/create-auth.dto';
-import { LoginDto } from '../dto/login.dto';
 import { UserResponseDto } from '../../users/dto/user-response.dto';
 import { UserRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 import { createClerkClient } from '@clerk/clerk-sdk-node';
 
 @Injectable()
@@ -15,134 +11,11 @@ export class AuthService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
   ) {
     // Inicializar Clerk API
     this.clerkApi = createClerkClient({
       secretKey: process.env.CLERK_SECRET_KEY,
     });
-  }
-
-  /**
-   * Registro de nuevo usuario
-   */
-  async register(createUserDto: CreateAuthDto): Promise<{ user: UserResponseDto; accessToken: string }> {
-    const { email, password, firstName, lastName, phone, role } = createUserDto;
-
-    // Verificar si el usuario ya existe
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('El usuario ya existe con este email');
-    }
-
-    // Encriptar contraseña
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Crear usuario
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        firstName,
-        lastName,
-        phone,
-        role: role || UserRole.CUSTOMER,
-        // Nota: En producción, se debería manejar la contraseña de forma segura
-        // Por ahora usamos un campo temporal hasta integrar Clerk
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        role: true,
-        status: true,
-        createdAt: true,
-      },
-    });
-
-    // Generar token JWT
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const accessToken = this.jwtService.sign(payload);
-
-    return {
-      user: this.mapUserToResponse(user),
-      accessToken,
-    };
-  }
-
-  /**
-   * Login de usuario
-   */
-  async login(loginDto: LoginDto): Promise<{ user: UserResponseDto; accessToken: string }> {
-    const { email, password } = loginDto;
-
-    // Buscar usuario
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
-
-    // Verificar contraseña (temporal hasta integrar Clerk)
-    // En producción, esto se manejará con Clerk
-    if (user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Usuario inactivo');
-    }
-
-    // Generar token JWT
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const accessToken = this.jwtService.sign(payload);
-
-    // Actualizar último login
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    return {
-      user: this.mapUserToResponse(user),
-      accessToken,
-    };
-  }
-
-  /**
-   * Validar usuario por JWT payload
-   */
-  async validateUser(payload: any): Promise<UserResponseDto> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        status: true,
-      },
-    });
-
-    if (!user || user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Usuario no válido');
-    }
-
-    return this.mapUserToResponse(user);
   }
 
   /**
@@ -182,6 +55,12 @@ export class AuthService {
   async syncWithClerk(clerkId: string, userData: any): Promise<UserResponseDto> {
     try {
       this.logger.log(`Sincronizando usuario con Clerk ID: ${clerkId}`);
+
+      // Validar que se reciban los datos necesarios
+      if (!clerkId || !userData || !userData.email) {
+        this.logger.error('Datos incompletos para sincronización', { clerkId, userData });
+        throw new Error('Datos incompletos: clerkId y userData.email son requeridos');
+      }
 
       // Buscar usuario existente por clerkId
       let user = await this.prisma.user.findUnique({
@@ -237,8 +116,11 @@ export class AuthService {
 
         this.logger.log(`Usuario existente vinculado con Clerk: ${user.email}`);
       } else {
-        // Determinar rol basado en userData
-        const role = userData.role || UserRole.CUSTOMER;
+        // Determinar rol basado en userData - asegurar que sea un valor válido del enum
+        let role: UserRole = UserRole.CUSTOMER;
+        if (userData.role && ['CUSTOMER', 'PROVIDER', 'ADMIN'].includes(userData.role)) {
+          role = userData.role as UserRole;
+        }
 
         // Crear nuevo usuario desde datos de Clerk
         user = await this.prisma.user.create({
@@ -292,32 +174,15 @@ export class AuthService {
       return this.mapUserToResponse(user);
     } catch (error) {
       this.logger.error('Error sincronizando usuario con Clerk:', error);
-      throw new UnauthorizedException('Error al sincronizar usuario');
+      this.logger.error('Error stack:', error.stack);
+      this.logger.error('Error details:', { clerkId, userData });
+      // Re-lanzar el error original en lugar de uno genérico
+      throw error;
     }
   }
 
-  /**
-   * Generar token de refresh
-   */
-  async generateRefreshToken(userId: string) {
-    const payload = { sub: userId, type: 'refresh' };
-    return this.jwtService.sign(payload, { expiresIn: '30d' });
-  }
-
-  /**
-   * Verificar token de refresh
-   */
-  async verifyRefreshToken(token: string) {
-    try {
-      const payload = this.jwtService.verify(token);
-      if (payload.type !== 'refresh') {
-        throw new UnauthorizedException('Token inválido');
-      }
-      return payload;
-    } catch (error) {
-      throw new UnauthorizedException('Token de refresh inválido');
-    }
-  }
+  // Nota: Refresh tokens son manejados por Clerk
+  // Estos métodos ya no son necesarios
 
   /**
    * Manejar creación de usuario desde webhook de Clerk
@@ -378,11 +243,76 @@ export class AuthService {
   }
 
   /**
+   * Obtener usuario por ID
+   */
+  async getUserById(userId: string): Promise<UserResponseDto> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { providerProfile: true },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Usuario no encontrado');
+      }
+
+      return this.mapUserToResponse(user);
+    } catch (error) {
+      this.logger.error('Error obteniendo usuario por ID:', error);
+      throw new UnauthorizedException('Error al obtener usuario');
+    }
+  }
+
+  /**
+   * Sincronizar rol del usuario de BD a Clerk
+   */
+  async syncRoleToClerk(clerkId: string) {
+    try {
+      this.logger.log(`[syncRoleToClerk] Iniciando sincronización de rol para: ${clerkId}`);
+
+      // Obtener usuario de la BD
+      const user = await this.prisma.user.findUnique({
+        where: { clerkId },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          status: true,
+        },
+      });
+
+      if (!user) {
+        this.logger.error(`[syncRoleToClerk] Usuario no encontrado en BD: ${clerkId}`);
+        throw new UnauthorizedException('Usuario no encontrado');
+      }
+
+      this.logger.log(`[syncRoleToClerk] Usuario encontrado en BD - Email: ${user.email}, Role: ${user.role}`);
+
+      // Actualizar metadata en Clerk
+      await this.clerkApi.users.updateUserMetadata(clerkId, {
+        publicMetadata: {
+          role: user.role,
+        },
+      });
+
+      this.logger.log(`[syncRoleToClerk] Metadata actualizada en Clerk para ${user.email} con rol: ${user.role}`);
+
+      return user;
+    } catch (error) {
+      this.logger.error('[syncRoleToClerk] Error sincronizando rol a Clerk:', error);
+      throw new UnauthorizedException('Error al sincronizar rol con Clerk');
+    }
+  }
+
+  /**
    * Mapear usuario de Prisma a UserResponseDto
    */
   private mapUserToResponse(user: any): UserResponseDto {
     return {
       id: user.id,
+      clerkId: user.clerkId,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

@@ -23,24 +23,28 @@ import {
   ApiBody
 } from '@nestjs/swagger';
 import { ProvidersService } from '../services/providers.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProviderDto } from '../dto/create-provider.dto';
 import { UpdateProviderDto } from '../dto/update-provider.dto';
 import { QueryProvidersDto } from '../dto/query-providers.dto';
 import { UpdateProviderStatusDto } from '../dto/update-provider-status.dto';
 import { NearbyProvidersDto } from '../dto/nearby-providers.dto';
 import { ProviderResponseDto, ProviderListResponseDto } from '../dto/provider-response.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../../auth/guards/clerk-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, ProviderStatus } from '@prisma/client';
 
 @ApiTags('providers')
 @Controller('providers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class ProvidersController {
-  constructor(private readonly providersService: ProvidersService) { }
+  constructor(
+    private readonly providersService: ProvidersService,
+    private readonly prisma: PrismaService
+  ) { }
 
   /**
    * Crear un nuevo proveedor
@@ -63,7 +67,72 @@ export class ProvidersController {
     @Body() createProviderDto: CreateProviderDto,
     @CurrentUser() user: any
   ): Promise<ProviderResponseDto> {
-    return this.providersService.create(createProviderDto, user.id);
+    return this.providersService.create(createProviderDto, user.clerkId);
+  }
+
+  /**
+   * Obtener solicitudes de proveedores (Admin)
+   */
+  @Get('requests')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Obtener solicitudes de proveedores pendientes (Admin)',
+    description: 'Obtiene proveedores con estatus PENDING_APPROVAL que tienen usuario asociado'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de solicitudes obtenida exitosamente',
+  })
+  @ApiQuery({ name: 'status', required: false, enum: ['PENDING_APPROVAL', 'ACTIVE', 'INACTIVE'], description: 'Filtrar por status' })
+  @ApiQuery({ name: 'page', required: false, description: 'Número de página' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Elementos por página' })
+  async getProviderRequests(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ): Promise<any> {
+    const filterStatus = status || 'PENDING_APPROVAL';
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+
+    // Buscar proveedores con el status especificado y que tengan usuario asociado
+    const where: any = {
+      status: filterStatus as ProviderStatus,
+      userId: { not: null } // Solo proveedores con usuario
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.provider.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              clerkId: true,
+              role: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum
+      }),
+      this.prisma.provider.count({ where })
+    ]);
+
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
+    };
   }
 
   /**
@@ -151,7 +220,7 @@ export class ProvidersController {
   })
   @ApiResponse({ status: 404, description: 'Usuario no tiene proveedor registrado' })
   async getMyProvider(@CurrentUser() user: any): Promise<ProviderResponseDto | null> {
-    return this.providersService.findByUserId(user.id);
+    return this.providersService.findByClerkId(user.clerkId);
   }
 
   /**
@@ -193,7 +262,7 @@ export class ProvidersController {
     @Body() updateProviderDto: UpdateProviderDto,
     @CurrentUser() user: any
   ): Promise<ProviderResponseDto> {
-    const myProvider = await this.providersService.findByUserId(user.id);
+    const myProvider = await this.providersService.findByClerkId(user.clerkId);
     if (!myProvider) {
       throw new NotFoundException('No tienes un proveedor registrado');
     }
@@ -246,7 +315,7 @@ export class ProvidersController {
   @ApiParam({ name: 'id', description: 'ID del proveedor' })
   @ApiBody({ type: UpdateProviderStatusDto })
   async updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateStatusDto: UpdateProviderStatusDto
   ): Promise<ProviderResponseDto> {
     return this.providersService.updateStatus(id, updateStatusDto);
@@ -267,7 +336,7 @@ export class ProvidersController {
   })
   @ApiResponse({ status: 404, description: 'Usuario no tiene proveedor registrado' })
   async removeMyProvider(@CurrentUser() user: any): Promise<{ message: string }> {
-    const myProvider = await this.providersService.findByUserId(user.id);
+    const myProvider = await this.providersService.findByClerkId(user.clerkId);
     if (!myProvider) {
       throw new NotFoundException('No tienes un proveedor registrado');
     }
