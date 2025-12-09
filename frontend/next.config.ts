@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
         port: '4000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'http',
+        hostname: '104.250.132.28',
+        port: '4000',
+        pathname: '/uploads/**',
+      },
     ],
   },
 };
