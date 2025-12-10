@@ -613,7 +613,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                   </div>
 
                   <div className="space-y-3">
-                    {service.provider.acceptsBookings && service.provider.status === 'VERIFIED' ? (
+                    {service.provider.acceptsBookings && (service.provider.status === 'VERIFIED' || service.provider.status === 'ACTIVE') ? (
                       <Button
                         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg py-6 shadow-lg"
                         onClick={openBookingModal}
