@@ -89,6 +89,13 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
         const data = await apiGet<any>(`/services/${id}`, { token });
 
         // Mapear datos de la API a la estructura que espera el componente
+        // Debug: verificar estructura de datos
+        console.log('[ServiceDetail] API Response:', {
+          serviceId: data.id,
+          providerId: data.providerId,
+          providerFromRelation: data.provider?.id
+        });
+
         const mappedService = {
           id: data.id,
           name: data.name,
@@ -104,7 +111,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
             ...(data.additionalImages || [])
           ],
           provider: {
-            id: data.provider?.id || data.providerId,
+            id: data.providerId, // Usar directamente providerId del servicio
             businessName: data.provider?.businessName || 'Proveedor',
             businessType: data.provider?.businessType || '',
             city: data.provider?.city || '',
@@ -117,7 +124,9 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
             rating: data.provider?.rating || 0,
             reviewCount: data.provider?.reviewCount || 0,
             acceptsBookings: data.provider?.acceptsBookings || false,
-            status: data.provider?.status || 'PENDING_APPROVAL'
+            status: data.provider?.status || 'PENDING_APPROVAL',
+            latitude: data.provider?.latitude,
+            longitude: data.provider?.longitude
           },
           features: data.includedServices || [],
           availability: data.isAvailable
