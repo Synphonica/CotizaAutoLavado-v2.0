@@ -38,3 +38,4 @@ scraper/
 docs/
 scripts/
 prompt.txt
+.env.production
