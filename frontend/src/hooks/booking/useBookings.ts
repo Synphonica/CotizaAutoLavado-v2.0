@@ -195,15 +195,20 @@ export function useAvailability() {
             setError(null);
 
             try {
+                console.log('[useAvailability] Checking availability:', { providerId, date, serviceId });
+
                 const data = await api.post<AvailabilityResponse>('/bookings/check-availability', {
                     providerId,
                     date,
                     serviceId,
                 });
+
+                console.log('[useAvailability] Response:', data);
                 setAvailability(data);
                 return data;
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+                console.error('[useAvailability] Error:', err);
                 setError(errorMessage);
                 throw err;
             } finally {

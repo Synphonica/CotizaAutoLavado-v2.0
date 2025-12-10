@@ -299,8 +299,13 @@ export class BookingsService {
      * Verificar disponibilidad de horarios
      */
     async checkAvailability(checkDto: CheckAvailabilityDto) {
+        console.log('[checkAvailability] Received:', checkDto);
+
         const date = new Date(checkDto.date);
         const dayOfWeek = date.getDay();
+
+        console.log('[checkAvailability] Date:', date.toISOString());
+        console.log('[checkAvailability] Day of week:', dayOfWeek);
 
         // Obtener franjas horarias del proveedor para ese día
         const timeSlots = await this.prisma.timeSlot.findMany({
@@ -311,17 +316,26 @@ export class BookingsService {
             },
         });
 
+        console.log('[checkAvailability] Time slots found:', timeSlots.length);
+
         if (timeSlots.length === 0) {
             return { available: false, message: 'No hay horarios disponibles para este día', slots: [] };
         }
+
+        // Crear nuevas instancias de Date para no modificar la original
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
 
         // Obtener reservas existentes para ese día
         const existingBookings = await this.prisma.booking.findMany({
             where: {
                 providerId: checkDto.providerId,
                 bookingDate: {
-                    gte: new Date(date.setHours(0, 0, 0, 0)),
-                    lte: new Date(date.setHours(23, 59, 59, 999)),
+                    gte: startOfDay,
+                    lte: endOfDay,
                 },
                 status: {
                     notIn: [BookingStatus.CANCELLED, BookingStatus.REJECTED],
@@ -329,8 +343,12 @@ export class BookingsService {
             },
         });
 
+        console.log('[checkAvailability] Existing bookings:', existingBookings.length);
+
         // Generar slots de 30 minutos disponibles
         const availableSlots = this.generateAvailableSlots(timeSlots, existingBookings, date);
+
+        console.log('[checkAvailability] Available slots generated:', availableSlots.length);
 
         return {
             available: availableSlots.length > 0,
