@@ -8,7 +8,7 @@ import { ModernNavbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, Star, MapPin, Clock, Percent, ChevronLeft, ChevronRight } from "lucide-react";
+import { SlidersHorizontal, Star, MapPin, Percent, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { SearchResultsSkeleton } from "@/components/ui/loading-skeletons";
 import { useAuth } from "@clerk/nextjs";
@@ -258,9 +258,7 @@ export default function Results({ searchParams }: { searchParams: Promise<{ q?: 
 
   const filters = [
     { label: "Descuento", icon: Percent },
-    { label: "Mejor valorados", icon: Star },
-    { label: "24/7", icon: Clock },
-    { label: "A domicilio", icon: MapPin }
+    { label: "Mejor valorados", icon: Star }
   ];
 
   return (
