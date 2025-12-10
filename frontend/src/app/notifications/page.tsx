@@ -282,7 +282,7 @@ export default function NotificationsPage() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteNotification(notification.id);
+                              handleDelete(notification.id);
                             }}
                             className="h-8 w-8 p-0 hover:bg-red-100"
                           >
@@ -300,105 +300,10 @@ export default function NotificationsPage() {
       </div>
     );
   }
-}
 
-const clearAll = async () => {
-  if (confirm('¿Estás seguro de que deseas eliminar todas las notificaciones?')) {
-    await deleteAllNotifications();
-  }
-};
-
-return (
-  <>
-    <ModernNavbar />
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-white lg:ml-72 sidebar-collapsed:lg:ml-20 transition-all duration-300">
-      {/* Existing content from line 140 onwards */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-[#0F9D58]/10 rounded-xl">
-                <Bell className="h-8 w-8 text-[#0F9D58]" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-[#073642]">Notificaciones</h1>
-                <p className="text-[#073642]/60">
-                  {unreadCount > 0 ? `${unreadCount} sin leer` : 'Todas leídas'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              {unreadCount > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={markAllAsRead}
-                  className="border-emerald-200 hover:bg-emerald-50"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Marcar todas como leídas
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'unread' | 'settings')}>
-            <TabsList className="bg-white border border-emerald-100">
-              <TabsTrigger value="all" className="data-[state=active]:bg-[#0F9D58] data-[state=active]:text-white">
-                Todas ({notifications.length})
-              </TabsTrigger>
-              <TabsTrigger value="unread" className="data-[state=active]:bg-[#0F9D58] data-[state=active]:text-white">
-                Sin leer ({unreadCount})
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-[#0F9D58] data-[state=active]:text-white">
-                <Settings className="h-4 w-4 mr-2" />
-                Configuración
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Tab Content - Notifications */}
-            <TabsContent value="all" className="mt-6">
-              {renderNotificationsList()}
-
-              {/* Clear All */}
-              {notifications.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-8 text-center"
-                >
-                  <Button
-                    variant="ghost"
-                    onClick={clearAll}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Borrar todas las notificaciones
-                  </Button>
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="unread" className="mt-6">
-              {renderNotificationsList()}
-            </TabsContent>
-
-            {/* Tab Content - Settings */}
-            <TabsContent value="settings" className="mt-6">
-              <NotificationSettings />
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </div>
-    </div>
-  </>
-);
-  }
+  const clearAll = async () => {
+    if (confirm('¿Estás seguro de que deseas eliminar todas las notificaciones?')) {
+      await deleteAllNotifications();
+    }
+  };
 }
