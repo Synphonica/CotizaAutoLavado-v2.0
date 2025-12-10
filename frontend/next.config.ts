@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker builds
-  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
+  // Siempre usar standalone en producción (Docker)
+  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
 
   eslint: {
     // Ignorar errores de ESLint durante el build de producción
