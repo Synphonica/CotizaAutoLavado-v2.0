@@ -95,6 +95,14 @@ export class AuthService {
           });
         }
 
+        // Sincronizar rol a Clerk después de actualizar
+        try {
+          await this.syncRoleToClerk(clerkId);
+          this.logger.log(`Rol sincronizado a Clerk para usuario existente: ${user.email}`);
+        } catch (error) {
+          this.logger.error(`Error sincronizando rol a Clerk: ${error.message}`);
+        }
+
         return this.mapUserToResponse(user);
       }
 
@@ -169,6 +177,14 @@ export class AuthService {
         }
 
         this.logger.log(`Nuevo usuario creado desde Clerk: ${user.email}`);
+      }
+
+      // Sincronizar rol a Clerk después de crear/vincular el usuario
+      try {
+        await this.syncRoleToClerk(clerkId);
+        this.logger.log(`Rol sincronizado a Clerk para usuario: ${user.email}`);
+      } catch (error) {
+        this.logger.error(`Error sincronizando rol a Clerk: ${error.message}`);
       }
 
       return this.mapUserToResponse(user);

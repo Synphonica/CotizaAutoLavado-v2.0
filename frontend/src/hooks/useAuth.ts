@@ -56,15 +56,8 @@ export function useAuth() {
       if (response && response.user?.role) {
         console.log('[useAuth] Role synced from backend:', response.user.role);
 
-        // Si el rol cambió, forzar recarga del usuario
-        if (response.user.role !== role) {
-          console.log('[useAuth] Role changed! Reloading user...');
-
-          // Forzar recarga del usuario de Clerk para obtener el nuevo metadata
-          await user.reload();
-
-          return response.user.role as UserRole;
-        }
+        // Retornar el rol inmediatamente, el backend ya actualizó Clerk
+        return response.user.role as UserRole;
       }
 
       return null;
@@ -116,27 +109,6 @@ export function useAuth() {
 
     fetchUserRole();
   }, [user, syncRoleFromBackend]);
-
-  // Verificar cambios de rol cada 10 segundos si el usuario está autenticado
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    const intervalId = setInterval(async () => {
-      const newRole = await syncRoleFromBackend();
-      if (newRole && newRole !== role) {
-        console.log('[useAuth] Role updated via interval check:', newRole);
-        setRole(newRole);
-
-        // Redirigir automáticamente según el nuevo rol
-        if (newRole === 'PROVIDER' && window.location.pathname.includes('/dashboard')) {
-          console.log('[useAuth] Redirecting to provider dashboard...');
-          router.push('/provider/dashboard');
-        }
-      }
-    }, 10000); // Verificar cada 10 segundos
-
-    return () => clearInterval(intervalId);
-  }, [isAuthenticated, user, role, syncRoleFromBackend, router]);
 
   const logout = async () => {
     try {
