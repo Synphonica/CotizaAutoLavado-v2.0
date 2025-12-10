@@ -8,8 +8,24 @@ import { apiPost } from '@/lib/api';
 type UserRole = 'CUSTOMER' | 'PROVIDER' | 'ADMIN' | null;
 
 export function useAuth() {
-  const { user, isLoaded: userLoaded } = useUser();
-  const { signOut, getToken } = useClerkAuth();
+  // Check if Clerk is available
+  let user: any = null;
+  let userLoaded = true;
+  let signOut: any = null;
+  let getToken: any = null;
+
+  try {
+    const clerkUser = useUser();
+    const clerkAuth = useClerkAuth();
+    user = clerkUser.user;
+    userLoaded = clerkUser.isLoaded;
+    signOut = clerkAuth.signOut;
+    getToken = clerkAuth.getToken;
+  } catch (error) {
+    // ClerkProvider not available (e.g., during SSR or missing keys)
+    console.log('[useAuth] Clerk not available:', error);
+  }
+
   const router = useRouter();
   const [role, setRole] = useState<UserRole>(null);
   const [roleLoading, setRoleLoading] = useState(true);
@@ -19,7 +35,7 @@ export function useAuth() {
 
   // Función para sincronizar rol desde el backend
   const syncRoleFromBackend = useCallback(async () => {
-    if (!user) return null;
+    if (!user || !getToken) return null;
 
     try {
       const token = await getToken();
@@ -124,7 +140,9 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await signOut();
+      if (signOut) {
+        await signOut();
+      }
       router.push('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
