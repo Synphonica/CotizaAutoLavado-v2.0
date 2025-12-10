@@ -42,6 +42,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
+        - DOCKER_BUILD=true
         - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}

@@ -4,12 +4,6 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker builds
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
 
-  // Deshabilitar generación estática para evitar errores con useSearchParams
-  experimental: {
-    // @ts-ignore
-    skipTrailingSlashRedirect: true,
-  },
-
   eslint: {
     // Ignorar errores de ESLint durante el build de producción
     ignoreDuringBuilds: true,
