@@ -11,7 +11,7 @@ import {
   LayoutDashboard, Users, Building2, FileText, Wrench, MessageSquare,
   Package, Calendar, Image as ImageIcon, Clock, Tag, Shield, Briefcase, Bot
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { SearchWithAI } from "@/components/ai/SearchWithAI";
 import { AIStatusIndicator } from "@/components/ai/AIStatusIndicator";
@@ -23,6 +23,18 @@ export function ModernNavbar() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showAISearch, setShowAISearch] = useState(false);
   const { role, isLoading } = useAuth();
+
+  // Guardar el último rol válido para evitar cambios visuales
+  const [lastValidRole, setLastValidRole] = useState<typeof role>(null);
+
+  useEffect(() => {
+    if (role && !isLoading) {
+      setLastValidRole(role);
+    }
+  }, [role, isLoading]);
+
+  // Usar el último rol válido o el actual
+  const currentRole = isLoading ? lastValidRole : role;
 
   // Menús según rol
   const customerNavItems: Array<{ href: string; label: string; icon: any; protected?: boolean }> = [
@@ -59,7 +71,7 @@ export function ModernNavbar() {
 
   // Seleccionar menú según rol
   const getNavItems = () => {
-    switch (role) {
+    switch (currentRole) {
       case 'ADMIN':
         return adminNavItems;
       case 'PROVIDER':
@@ -70,7 +82,7 @@ export function ModernNavbar() {
     }
   };
 
-  const navItems = getNavItems();
+  const navItems = useMemo(() => getNavItems(), [currentRole]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -88,14 +100,9 @@ export function ModernNavbar() {
     }
   }, [isCollapsed]);
 
-  // No renderizar hasta que el rol esté cargado para evitar parpadeo
-  if (isLoading) {
-    return null;
-  }
-
   // Obtener título según rol
   const getTitle = () => {
-    switch (role) {
+    switch (currentRole) {
       case 'ADMIN':
         return 'Panel Admin';
       case 'PROVIDER':
@@ -108,7 +115,7 @@ export function ModernNavbar() {
 
   // Obtener color de gradiente según rol
   const getGradientColors = () => {
-    switch (role) {
+    switch (currentRole) {
       case 'ADMIN':
         return 'from-red-500 to-pink-500';
       case 'PROVIDER':
@@ -126,15 +133,15 @@ export function ModernNavbar() {
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="flex items-center gap-3">
             <div className={`w-8 h-8 bg-gradient-to-br ${getGradientColors()} rounded-lg flex items-center justify-center`}>
-              {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
-                role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+              {currentRole === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                currentRole === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
                   <Droplets className="h-5 w-5 text-white" />}
             </div>
             <div>
               <span className="text-xl font-bold text-gray-900 dark:text-white block">{getTitle()}</span>
-              {role && role !== 'CUSTOMER' && (
+              {currentRole && currentRole !== 'CUSTOMER' && (
                 <span className="text-xs text-gray-500 dark:text-gray-400 block">
-                  {role === 'ADMIN' ? 'Administrador' : 'Proveedor'}
+                  {currentRole === 'ADMIN' ? 'Administrador' : 'Proveedor'}
                 </span>
               )}
             </div>
@@ -196,7 +203,7 @@ export function ModernNavbar() {
 
               <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
                 <SignedIn>
-                  <Link href={role === 'PROVIDER' ? '/provider/settings' : '/settings'} onClick={() => setIsMobileOpen(false)}>
+                  <Link href={currentRole === 'PROVIDER' ? '/provider/settings' : '/settings'} onClick={() => setIsMobileOpen(false)}>
                     <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 w-full">
                       <Settings className="h-5 w-5" />
                       Settings
@@ -251,17 +258,17 @@ export function ModernNavbar() {
           {/* Logo & Collapse Button */}
           <div className="flex items-center justify-between mb-6">
             {!isCollapsed && (
-              <Link href={role === 'ADMIN' ? '/admin' : role === 'PROVIDER' ? '/provider/dashboard' : '/'} className="flex items-center gap-3">
+              <Link href={currentRole === 'ADMIN' ? '/admin' : currentRole === 'PROVIDER' ? '/provider/dashboard' : '/'} className="flex items-center gap-3">
                 <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColors()} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                  {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
-                    role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+                  {currentRole === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                    currentRole === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
                       <Droplets className="h-5 w-5 text-white" />}
                 </div>
                 <div>
                   <span className="text-xl font-bold text-gray-900 dark:text-white block">{getTitle()}</span>
-                  {role && role !== 'CUSTOMER' && (
+                  {currentRole && currentRole !== 'CUSTOMER' && (
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {role === 'ADMIN' ? 'Administrador' : 'Proveedor'}
+                      {currentRole === 'ADMIN' ? 'Administrador' : 'Proveedor'}
                     </span>
                   )}
                 </div>
@@ -270,8 +277,8 @@ export function ModernNavbar() {
 
             {isCollapsed && (
               <div className={`w-10 h-10 bg-gradient-to-br ${getGradientColors()} rounded-xl flex items-center justify-center mx-auto`}>
-                {role === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
-                  role === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
+                {currentRole === 'ADMIN' ? <Shield className="h-5 w-5 text-white" /> :
+                  currentRole === 'PROVIDER' ? <Building2 className="h-5 w-5 text-white" /> :
                     <Droplets className="h-5 w-5 text-white" />}
               </div>
             )}
@@ -288,7 +295,7 @@ export function ModernNavbar() {
             )}
           </div>
           {/* AI Search Toggle - Solo para clientes */}
-          {!isCollapsed && role === 'CUSTOMER' && (
+          {!isCollapsed && currentRole === 'CUSTOMER' && (
             <div className="mb-6 space-y-2">
               <button
                 onClick={() => setShowAISearch(!showAISearch)}
@@ -304,7 +311,7 @@ export function ModernNavbar() {
             </div>
           )}
 
-          {isCollapsed && role === 'CUSTOMER' && (
+          {isCollapsed && currentRole === 'CUSTOMER' && (
             <button
               onClick={() => setShowAISearch(!showAISearch)}
               className="mb-6 p-3 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 hover:from-purple-200 hover:to-blue-200 dark:hover:from-purple-900/50 dark:hover:to-blue-900/50 flex items-center justify-center transition-all"
@@ -406,7 +413,7 @@ export function ModernNavbar() {
 
             <SignedIn>
               <Link
-                href={role === 'PROVIDER' ? '/provider/settings' : '/settings'}
+                href={currentRole === 'PROVIDER' ? '/provider/settings' : '/settings'}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all ${isCollapsed ? 'justify-center' : ''}`}
                 title={isCollapsed ? "Settings" : undefined}
               >
