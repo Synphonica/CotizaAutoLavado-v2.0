@@ -72,11 +72,6 @@ export function ModernNavbar() {
 
   const navItems = getNavItems();
 
-  // No renderizar hasta que el rol esté cargado para evitar parpadeo
-  if (isLoading) {
-    return null;
-  }
-
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -92,6 +87,11 @@ export function ModernNavbar() {
       document.documentElement.classList.remove('sidebar-collapsed');
     }
   }, [isCollapsed]);
+
+  // No renderizar hasta que el rol esté cargado para evitar parpadeo
+  if (isLoading) {
+    return null;
+  }
 
   // Obtener título según rol
   const getTitle = () => {
