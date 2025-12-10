@@ -150,6 +150,42 @@ async function main() {
             console.log(`  ✅ ${service.name} - $${service.price}`);
         }
 
+        // 4. Crear time slots para cada día de la semana
+        console.log('\n⏰ Creando franjas horarias...\n');
+
+        const weekDays = [
+            { day: 0, name: 'Domingo', hours: { open: '10:00', close: '16:00' } },
+            { day: 1, name: 'Lunes', hours: { open: '09:00', close: '19:00' } },
+            { day: 2, name: 'Martes', hours: { open: '09:00', close: '19:00' } },
+            { day: 3, name: 'Miércoles', hours: { open: '09:00', close: '19:00' } },
+            { day: 4, name: 'Jueves', hours: { open: '09:00', close: '19:00' } },
+            { day: 5, name: 'Viernes', hours: { open: '09:00', close: '20:00' } },
+            { day: 6, name: 'Sábado', hours: { open: '09:00', close: '18:00' } },
+        ];
+
+        for (const weekDay of weekDays) {
+            // Eliminar time slots existentes para este día
+            await prisma.timeSlot.deleteMany({
+                where: {
+                    providerId: provider.id,
+                    dayOfWeek: weekDay.day,
+                },
+            });
+
+            // Crear time slot para el día completo
+            await prisma.timeSlot.create({
+                data: {
+                    providerId: provider.id,
+                    dayOfWeek: weekDay.day,
+                    startTime: weekDay.hours.open,
+                    endTime: weekDay.hours.close,
+                    isAvailable: true,
+                },
+            });
+
+            console.log(`  ✅ ${weekDay.name}: ${weekDay.hours.open} - ${weekDay.hours.close}`);
+        }
+
         console.log('\n✨ ¡Configuración completada!\n');
         console.log('📊 Resumen:');
         console.log(`   Usuario: ${user.email}`);
