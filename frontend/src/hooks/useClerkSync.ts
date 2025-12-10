@@ -2,7 +2,6 @@
 
 import { useUser, useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 interface SyncStatus {
     isSynced: boolean;
@@ -13,14 +12,11 @@ interface SyncStatus {
 export function useClerkSync() {
     const { user, isLoaded: userLoaded } = useUser();
     const { getToken } = useAuth();
-    const searchParams = useSearchParams();
     const [syncStatus, setSyncStatus] = useState<SyncStatus>({
         isSynced: false,
         isLoading: true,
         error: null,
-    });
-
-    useEffect(() => {
+    }); useEffect(() => {
         const syncUserWithBackend = async () => {
             if (!userLoaded) return;
 
@@ -43,10 +39,9 @@ export function useClerkSync() {
                     throw new Error('No se pudo obtener el token de autenticación');
                 }
 
-                // Obtener el rol del parámetro de URL o localStorage
-                const roleFromUrl = searchParams?.get('role');
+                // Obtener el rol desde localStorage (ya no usamos searchParams)
                 const roleFromStorage = typeof window !== 'undefined' ? localStorage.getItem('selectedRole') : null;
-                const role = roleFromUrl || roleFromStorage || 'CUSTOMER';
+                const role = roleFromStorage || 'CUSTOMER';
 
                 // Sincronizar con backend
                 const apiUrl = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL + '/api' || 'http://localhost:4000/api';
