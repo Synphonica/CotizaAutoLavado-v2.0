@@ -59,8 +59,6 @@ export function ModernNavbar() {
 
   // Seleccionar menú según rol
   const getNavItems = () => {
-    if (isLoading) return customerNavItems; // Mostrar menú por defecto mientras carga
-
     switch (role) {
       case 'ADMIN':
         return adminNavItems;
@@ -73,6 +71,11 @@ export function ModernNavbar() {
   };
 
   const navItems = getNavItems();
+
+  // No renderizar hasta que el rol esté cargado para evitar parpadeo
+  if (isLoading) {
+    return null;
+  }
 
   useEffect(() => {
     if (isDarkMode) {
