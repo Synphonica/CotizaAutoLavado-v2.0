@@ -1,6 +1,6 @@
 "use client";
 import { UserProfile } from "@clerk/nextjs";
-import { ModernNavbar } from "@/components/ModernNavbar";
+import { ModernNavbar } from "@/components/Navbar";
 
 export default function Page() {
   return (

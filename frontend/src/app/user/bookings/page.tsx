@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BookingList from '@/components/booking/BookingList';
 import { Loader2 } from 'lucide-react';
-import { ModernNavbar } from '@/components/ModernNavbar';
+import { ModernNavbar } from '@/components/Navbar';
 
 export default function MyBookingsPage() {
     const { isLoaded, isSignedIn, userId } = useAuth();

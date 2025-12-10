@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import AlertsDashboard from '@/components/alerts/AlertsDashboard';
 import { Bell } from 'lucide-react';
-import { ModernNavbar } from '@/components/ModernNavbar';
+import { ModernNavbar } from '@/components/Navbar';
 
 export const metadata = {
     title: 'Mis Alertas de Precio | Alto Carwash',
