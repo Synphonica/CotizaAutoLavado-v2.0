@@ -1,9 +1,10 @@
 "use client";
+
+export const dynamic = 'force-dynamic';
+
 import { SignUp } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-
-export const dynamic = 'force-dynamic';
 
 export default function Page() {
   const searchParams = useSearchParams();
