@@ -16,7 +16,9 @@ export function useClerkSync() {
         isSynced: false,
         isLoading: true,
         error: null,
-    }); useEffect(() => {
+    });
+
+    useEffect(() => {
         const syncUserWithBackend = async () => {
             if (!userLoaded) return;
 
@@ -92,7 +94,7 @@ export function useClerkSync() {
         };
 
         syncUserWithBackend();
-    }, [user, userLoaded, getToken, searchParams]);
+    }, [user, userLoaded, getToken]);
 
     return {
         user,
