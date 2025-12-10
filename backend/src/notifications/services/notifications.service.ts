@@ -15,13 +15,25 @@ export class NotificationsService {
     /**
      * Crear una nueva notificación
      */
-    async create(createNotificationDto: CreateNotificationDto): Promise<NotificationResponseDto> {
+    async create(createNotificationDto: CreateNotificationDto): Promise<NotificationResponseDto | null> {
         // Verificar que el usuario existe
         const user = await this.prisma.user.findUnique({
             where: { id: createNotificationDto.userId }
         });
         if (!user) {
             throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Verificar si el usuario tiene habilitadas notificaciones de este tipo
+        const isEnabled = await this.isNotificationEnabled(
+            createNotificationDto.userId,
+            createNotificationDto.type
+        );
+
+        // Si las notificaciones de este tipo están deshabilitadas, no crear la notificación
+        if (!isEnabled) {
+            // Retornar null indicando que no se creó
+            return null;
         }
 
         // Verificar que el proveedor existe (si se proporciona)
@@ -254,7 +266,7 @@ export class NotificationsService {
     }
 
     /**
-     * Obtener notificaciones por usuario
+     * Obtener notificaciones por usuario (por ID de base de datos)
      */
     async findByUser(userId: string, queryDto: NotificationsByUserDto): Promise<{
         notifications: NotificationResponseDto[];
@@ -393,17 +405,17 @@ export class NotificationsService {
     }
 
     /**
-     * Obtener contador de notificaciones no leídas para un usuario
+     * Obtener contador de notificaciones no leídas (por ID de base de datos)
      */
     async getUnreadCount(userId: string): Promise<{ unreadCount: number }> {
-        const unreadCount = await this.prisma.notification.count({
+        const count = await this.prisma.notification.count({
             where: {
                 userId,
                 status: NotificationStatus.UNREAD
             }
         });
 
-        return { unreadCount };
+        return { unreadCount: count };
     }
 
     /**
@@ -415,7 +427,7 @@ export class NotificationsService {
         serviceId: string,
         oldPrice: number,
         newPrice: number
-    ): Promise<NotificationResponseDto> {
+    ): Promise<NotificationResponseDto | null> {
         const discount = Math.round(((oldPrice - newPrice) / oldPrice) * 100);
 
         return this.create({
@@ -444,7 +456,7 @@ export class NotificationsService {
         serviceId: string,
         offerTitle: string,
         offerDescription: string
-    ): Promise<NotificationResponseDto> {
+    ): Promise<NotificationResponseDto | null> {
         return this.create({
             userId,
             type: NotificationType.NEW_OFFER,
@@ -467,7 +479,7 @@ export class NotificationsService {
         userId: string,
         providerId: string,
         providerName: string
-    ): Promise<NotificationResponseDto> {
+    ): Promise<NotificationResponseDto | null> {
         return this.create({
             userId,
             type: NotificationType.NEW_PROVIDER,
@@ -479,6 +491,246 @@ export class NotificationsService {
             },
             actionUrl: `/providers/${providerId}`
         });
+    }
+
+    /**
+     * Obtener las preferencias de notificación de un usuario
+     */
+    async getUserPreferences(userId: string): Promise<any> {
+        // Verificar que el usuario existe
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Obtener todas las preferencias del usuario
+        const preferences = await this.prisma.notificationPreference.findMany({
+            where: { userId },
+            orderBy: { type: 'asc' }
+        });
+
+        // Crear preferencias por defecto para tipos que no existen
+        const allTypes = Object.values(NotificationType);
+        const existingTypes = preferences.map(p => p.type);
+        const missingTypes = allTypes.filter(type => !existingTypes.includes(type));
+
+        // Crear preferencias faltantes con valor por defecto (habilitadas)
+        if (missingTypes.length > 0) {
+            await this.prisma.notificationPreference.createMany({
+                data: missingTypes.map(type => ({
+                    userId,
+                    type,
+                    enabled: true
+                })),
+                skipDuplicates: true
+            });
+
+            // Volver a obtener todas las preferencias
+            const allPreferences = await this.prisma.notificationPreference.findMany({
+                where: { userId },
+                orderBy: { type: 'asc' }
+            });
+
+            return this.mapPreferencesToResponse(allPreferences);
+        }
+
+        return this.mapPreferencesToResponse(preferences);
+    }
+
+    /**
+     * Actualizar una preferencia de notificación
+     */
+    async updateUserPreference(userId: string, type: NotificationType, enabled: boolean): Promise<any> {
+        // Verificar que el usuario existe
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Actualizar o crear la preferencia
+        const preference = await this.prisma.notificationPreference.upsert({
+            where: {
+                userId_type: {
+                    userId,
+                    type
+                }
+            },
+            update: {
+                enabled
+            },
+            create: {
+                userId,
+                type,
+                enabled
+            }
+        });
+
+        return {
+            id: preference.id,
+            userId: preference.userId,
+            type: preference.type,
+            enabled: preference.enabled,
+            createdAt: preference.createdAt,
+            updatedAt: preference.updatedAt
+        };
+    }
+
+    /**
+     * Actualizar múltiples preferencias de notificación
+     */
+    async updateUserPreferences(userId: string, preferences: Record<NotificationType, boolean>): Promise<any> {
+        // Verificar que el usuario existe
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Actualizar cada preferencia
+        const updates = await Promise.all(
+            Object.entries(preferences).map(([type, enabled]) =>
+                this.prisma.notificationPreference.upsert({
+                    where: {
+                        userId_type: {
+                            userId,
+                            type: type as NotificationType
+                        }
+                    },
+                    update: { enabled },
+                    create: {
+                        userId,
+                        type: type as NotificationType,
+                        enabled
+                    }
+                })
+            )
+        );
+
+        return this.mapPreferencesToResponse(updates);
+    }
+
+    /**
+     * Habilitar todas las notificaciones para un usuario
+     */
+    async enableAllPreferences(userId: string): Promise<any> {
+        // Verificar que el usuario existe
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Actualizar todas las preferencias a habilitadas
+        await this.prisma.notificationPreference.updateMany({
+            where: { userId },
+            data: { enabled: true }
+        });
+
+        // Crear preferencias para tipos que no existen
+        const allTypes = Object.values(NotificationType);
+        for (const type of allTypes) {
+            await this.prisma.notificationPreference.upsert({
+                where: {
+                    userId_type: {
+                        userId,
+                        type
+                    }
+                },
+                update: { enabled: true },
+                create: {
+                    userId,
+                    type,
+                    enabled: true
+                }
+            });
+        }
+
+        return this.getUserPreferences(userId);
+    }
+
+    /**
+     * Deshabilitar todas las notificaciones para un usuario
+     */
+    async disableAllPreferences(userId: string): Promise<any> {
+        // Verificar que el usuario exists
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Actualizar todas las preferencias a deshabilitadas
+        await this.prisma.notificationPreference.updateMany({
+            where: { userId },
+            data: { enabled: false }
+        });
+
+        // Crear preferencias para tipos que no existen
+        const allTypes = Object.values(NotificationType);
+        for (const type of allTypes) {
+            await this.prisma.notificationPreference.upsert({
+                where: {
+                    userId_type: {
+                        userId,
+                        type
+                    }
+                },
+                update: { enabled: false },
+                create: {
+                    userId,
+                    type,
+                    enabled: false
+                }
+            });
+        }
+
+        return this.getUserPreferences(userId);
+    }
+
+    /**
+     * Verificar si un usuario tiene habilitado un tipo de notificación
+     */
+    async isNotificationEnabled(userId: string, type: NotificationType): Promise<boolean> {
+        const preference = await this.prisma.notificationPreference.findUnique({
+            where: {
+                userId_type: {
+                    userId,
+                    type
+                }
+            }
+        });
+
+        // Si no existe la preferencia, por defecto está habilitada
+        return preference ? preference.enabled : true;
+    }
+
+    /**
+     * Mapear preferencias a respuesta
+     */
+    private mapPreferencesToResponse(preferences: any[]): any {
+        const enabledCount = preferences.filter(p => p.enabled).length;
+        const totalCount = preferences.length;
+
+        return {
+            preferences: preferences.map(p => ({
+                id: p.id,
+                userId: p.userId,
+                type: p.type,
+                enabled: p.enabled,
+                createdAt: p.createdAt,
+                updatedAt: p.updatedAt
+            })),
+            allEnabled: enabledCount === totalCount,
+            enabledCount,
+            totalCount
+        };
     }
 
     /**

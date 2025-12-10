@@ -9,7 +9,8 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  BadRequestException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -50,11 +51,19 @@ export class NotificationsController {
     description: 'Notificación creada exitosamente',
     type: NotificationResponseDto
   })
+  @ApiResponse({
+    status: 204,
+    description: 'Notificación no creada porque el usuario tiene deshabilitado este tipo de notificación'
+  })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
   @ApiResponse({ status: 404, description: 'Usuario, proveedor o servicio no encontrado' })
   @ApiBearerAuth()
   async create(@Body() createNotificationDto: CreateNotificationDto): Promise<NotificationResponseDto> {
-    return this.notificationsService.create(createNotificationDto);
+    const result = await this.notificationsService.create(createNotificationDto);
+    if (!result) {
+      throw new BadRequestException('El usuario tiene deshabilitadas las notificaciones de este tipo');
+    }
+    return result;
   }
 
   @Get()
@@ -354,5 +363,153 @@ export class NotificationsController {
   @ApiBearerAuth()
   async removeAllMyNotifications(@CurrentUser() user: any) {
     return this.notificationsService.removeAllByUser(user.id);
+  }
+
+  // ============================================
+  // ENDPOINTS DE PREFERENCIAS DE NOTIFICACIONES
+  // ============================================
+
+  @Get('preferences')
+  @ApiOperation({
+    summary: 'Obtener preferencias de notificación',
+    description: 'Obtiene las preferencias de notificación del usuario autenticado'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Preferencias obtenidas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        preferences: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', example: 'pref_123' },
+              userId: { type: 'string', example: 'user_123' },
+              type: { type: 'string', example: 'PRICE_DROP' },
+              enabled: { type: 'boolean', example: true },
+              createdAt: { type: 'string', example: '2025-01-15T10:30:00Z' },
+              updatedAt: { type: 'string', example: '2025-01-15T10:30:00Z' }
+            }
+          }
+        },
+        allEnabled: { type: 'boolean', example: false },
+        enabledCount: { type: 'number', example: 3 },
+        totalCount: { type: 'number', example: 4 }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async getMyPreferences(@CurrentUser() user: any) {
+    return this.notificationsService.getUserPreferences(user.id);
+  }
+
+  @Patch('preferences/:type')
+  @ApiOperation({
+    summary: 'Actualizar preferencia de notificación',
+    description: 'Actualiza la preferencia de un tipo específico de notificación'
+  })
+  @ApiParam({
+    name: 'type',
+    enum: ['PRICE_DROP', 'NEW_OFFER', 'NEW_PROVIDER', 'SYSTEM_UPDATE'],
+    description: 'Tipo de notificación'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Preferencia actualizada exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: 'pref_123' },
+        userId: { type: 'string', example: 'user_123' },
+        type: { type: 'string', example: 'PRICE_DROP' },
+        enabled: { type: 'boolean', example: true },
+        createdAt: { type: 'string', example: '2025-01-15T10:30:00Z' },
+        updatedAt: { type: 'string', example: '2025-01-15T10:30:00Z' }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async updateMyPreference(
+    @CurrentUser() user: any,
+    @Param('type') type: string,
+    @Body() body: { enabled: boolean }
+  ) {
+    return this.notificationsService.updateUserPreference(user.id, type as any, body.enabled);
+  }
+
+  @Patch('preferences')
+  @ApiOperation({
+    summary: 'Actualizar múltiples preferencias',
+    description: 'Actualiza múltiples preferencias de notificación a la vez'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Preferencias actualizadas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        preferences: { type: 'array' },
+        allEnabled: { type: 'boolean', example: false },
+        enabledCount: { type: 'number', example: 3 },
+        totalCount: { type: 'number', example: 4 }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async updateMyPreferences(
+    @CurrentUser() user: any,
+    @Body() body: { preferences: Record<string, boolean> }
+  ) {
+    return this.notificationsService.updateUserPreferences(user.id, body.preferences as any);
+  }
+
+  @Post('preferences/enable-all')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Habilitar todas las notificaciones',
+    description: 'Habilita todos los tipos de notificaciones para el usuario'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Todas las notificaciones habilitadas',
+    schema: {
+      type: 'object',
+      properties: {
+        preferences: { type: 'array' },
+        allEnabled: { type: 'boolean', example: true },
+        enabledCount: { type: 'number', example: 4 },
+        totalCount: { type: 'number', example: 4 }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async enableAllMyPreferences(@CurrentUser() user: any) {
+    return this.notificationsService.enableAllPreferences(user.id);
+  }
+
+  @Post('preferences/disable-all')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Deshabilitar todas las notificaciones',
+    description: 'Deshabilita todos los tipos de notificaciones para el usuario'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Todas las notificaciones deshabilitadas',
+    schema: {
+      type: 'object',
+      properties: {
+        preferences: { type: 'array' },
+        allEnabled: { type: 'boolean', example: false },
+        enabledCount: { type: 'number', example: 0 },
+        totalCount: { type: 'number', example: 4 }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async disableAllMyPreferences(@CurrentUser() user: any) {
+    return this.notificationsService.disableAllPreferences(user.id);
   }
 }

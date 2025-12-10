@@ -644,10 +644,13 @@ export class SearchService {
 
         // Buscar servicios similares basados en:
         // 1. Mismo tipo de servicio
-        // 2. Rango de precio similar (±30%)
+        // 2. Rango de precio más amplio para mayor variedad (±50%)
         // 3. Diferente proveedor (para comparar)
-        const minPrice = Number(originalService.price) * 0.7;
-        const maxPrice = Number(originalService.price) * 1.3;
+        const minPrice = Number(originalService.price) * 0.5;
+        const maxPrice = Number(originalService.price) * 1.5;
+
+        // Obtener más servicios de los necesarios para poder randomizar
+        const fetchLimit = Math.min(limit * 3, 50);
 
         const similarServices = await this.prisma.service.findMany({
             where: {
@@ -688,16 +691,16 @@ export class SearchService {
                     }
                 }
             },
-            orderBy: [
-                { price: 'asc' } // Ordenar por precio
-            ],
-            take: limit
+            take: fetchLimit
         });
 
+        // Randomizar los servicios para mayor variedad
+        const shuffled = similarServices.sort(() => Math.random() - 0.5);
+
         // Si hay coordenadas del proveedor original, calcular distancias
-        let servicesWithDistance = similarServices;
+        let servicesWithDistance = shuffled;
         if (originalService.provider.latitude && originalService.provider.longitude) {
-            servicesWithDistance = similarServices.map(service => {
+            servicesWithDistance = shuffled.map(service => {
                 const serviceWithProvider = service as any;
                 if (serviceWithProvider.provider?.latitude && serviceWithProvider.provider?.longitude) {
                     const distance = this.calculateDistance(
@@ -711,16 +714,23 @@ export class SearchService {
                 return service;
             });
 
-            // Ordenar por distancia si está disponible
-            servicesWithDistance.sort((a: any, b: any) => {
-                if (a.distance && b.distance) {
+            // Mezcla de criterios: algunos por precio, otros por distancia, algunos random
+            servicesWithDistance = servicesWithDistance.sort((a: any, b: any) => {
+                const rand = Math.random();
+                if (rand < 0.33) {
+                    // 33% ordenar por precio
+                    return Number(a.price) - Number(b.price);
+                } else if (rand < 0.66 && a.distance && b.distance) {
+                    // 33% ordenar por distancia
                     return a.distance - b.distance;
                 }
+                // 33% mantener aleatorio
                 return 0;
             });
         }
 
-        return servicesWithDistance.map(service => this.mapToSearchResult(service));
+        // Tomar solo el límite solicitado
+        return servicesWithDistance.slice(0, limit).map(service => this.mapToSearchResult(service));
     }
 
     /**

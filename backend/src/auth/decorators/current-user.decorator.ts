@@ -1,14 +1,16 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /**
- * User data extracted from Clerk JWT token
+ * User data extracted from Clerk JWT token and enriched with database info
  */
 export interface CurrentUserData {
+  id: string; // Database user ID
   clerkId: string;
   email: string;
   name?: string;
   avatar?: string;
   emailVerified?: boolean;
+  role?: any; // UserRole from Prisma
 }
 
 /**

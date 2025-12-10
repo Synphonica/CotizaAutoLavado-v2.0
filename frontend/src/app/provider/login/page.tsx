@@ -65,31 +65,10 @@ export default function ProviderLoginPage() {
         setErrors({});
 
         try {
-            // Aquí iría la llamada al API para autenticar
-            // Por ahora simulamos la autenticación
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Simular respuesta exitosa
-            const mockResponse = {
-                success: true,
-                token: 'mock-jwt-token',
-                provider: {
-                    id: '1',
-                    businessName: 'AutoClean Pro',
-                    email: formData.email,
-                }
-            };
-
-            if (mockResponse.success) {
-                // Guardar token en localStorage (en producción usar cookies HttpOnly)
-                localStorage.setItem('providerToken', mockResponse.token);
-                localStorage.setItem('providerData', JSON.stringify(mockResponse.provider));
-
-                // Redirigir al dashboard
-                router.push('/provider');
-            } else {
-                setErrors({ submit: 'Credenciales inválidas' });
-            }
+            // TODO: Implementar autenticación real con el backend
+            // Este archivo debería migrar a usar Clerk authentication
+            setErrors({ submit: 'Esta funcionalidad debe usar Clerk Authentication. Redirigiendo...' });
+            setTimeout(() => router.push('/sign-in'), 2000);
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
             setErrors({ submit: 'Error al iniciar sesión. Intenta nuevamente.' });

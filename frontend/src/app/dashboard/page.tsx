@@ -29,52 +29,15 @@ import {
   ArrowRight
 } from "lucide-react";
 
-// Mock data para el dashboard
-const mockFavorites: ServiceItem[] = [
-  {
-    id: "1",
-    name: "Lavado Exterior Premium",
-    price: 15000,
-    provider: { id: "p1", businessName: "AutoClean Pro", city: "Providencia" },
-    rating: 4.8,
-    discount: 20
-  },
-  {
-    id: "2",
-    name: "Lavado Completo + Encerado",
-    price: 25000,
-    provider: { id: "p2", businessName: "Car Spa", city: "Las Condes" },
-    rating: 4.9,
-    discount: 15
-  }
-];
-
-const mockHistory = [
-  {
-    id: "1",
-    service: "Lavado Express",
-    provider: "Quick Wash",
-    date: "2024-01-15",
-    price: 8000,
-    rating: 4.5
-  },
-  {
-    id: "2",
-    service: "Lavado Premium",
-    provider: "Elite Auto",
-    date: "2024-01-10",
-    price: 35000,
-    rating: 4.9
-  }
-];
+// Los datos se cargan desde la API
 
 export default function DashboardPage() {
   const { user, role } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const providerRequestStatus = searchParams.get('provider_request');
-  const [favorites, setFavorites] = useState<ServiceItem[]>(mockFavorites);
-  const [history, setHistory] = useState(mockHistory);
+  const [favorites, setFavorites] = useState<ServiceItem[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Redirigir a dashboard de proveedor si el rol es PROVIDER

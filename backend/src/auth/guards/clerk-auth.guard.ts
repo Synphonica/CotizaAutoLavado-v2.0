@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface ClerkUser {
+    id: string; // Database user ID
     clerkId: string;
     email: string;
     name?: string;
@@ -50,27 +51,27 @@ export class ClerkAuthGuard implements CanActivate {
             }) as any;
 
             // Extract user data from token claims
+            const clerkId = (payload.user_metadata?.clerk_id || payload.sub) as string;
+            const email = payload.email as string;
+
+            // Look up user in database to get database ID
+            const dbUser = await this.prisma.user.findUnique({
+                where: { clerkId },
+                select: { id: true, role: true },
+            });
+
+            // If user doesn't exist in database yet, we still allow the request
+            // but services that need database user will handle creation
             const user: ClerkUser = {
-                clerkId: (payload.user_metadata?.clerk_id || payload.sub) as string,
-                email: payload.email as string,
+                id: dbUser?.id || '', // Database ID (empty if not found)
+                clerkId: clerkId,
+                email: email,
                 name: payload.user_metadata?.name as string | undefined,
                 avatar: payload.user_metadata?.avatar as string | undefined,
                 emailVerified: payload.email_verified as boolean | undefined,
-                // Extract role from Clerk's publicMetadata
-                role: (payload.public_metadata?.role || payload.publicMetadata?.role) as UserRole | undefined,
+                // Use role from database if available, otherwise from token
+                role: dbUser?.role || (payload.public_metadata?.role || payload.publicMetadata?.role) as UserRole | undefined,
             };
-
-            // Si no hay rol en el token, buscarlo en la base de datos
-            if (!user.role && user.clerkId) {
-                const dbUser = await this.prisma.user.findUnique({
-                    where: { clerkId: user.clerkId },
-                    select: { role: true },
-                });
-
-                if (dbUser) {
-                    user.role = dbUser.role;
-                }
-            }
 
             // Attach user to request
             request.user = user;

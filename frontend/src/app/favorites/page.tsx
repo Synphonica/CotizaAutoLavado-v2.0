@@ -23,56 +23,9 @@ import { useUser } from "@clerk/nextjs";
 import { apiGet, apiDelete } from "@/lib/api";
 import { SearchResultsSkeleton } from "@/components/ui/loading-skeletons";
 
-// Mock favorites data
-const mockFavorites: ServiceItem[] = [
-    {
-        id: "1",
-        name: "Lavado Exterior Premium",
-        price: 15000,
-        provider: {
-            id: "p1",
-            businessName: "AutoClean Pro",
-            city: "Providencia",
-        },
-        rating: 4.8,
-        discount: 20,
-        duration: 45,
-        description: "Lavado exterior completo con productos premium",
-        category: "exterior"
-    },
-    {
-        id: "2",
-        name: "Detailing Completo",
-        price: 45000,
-        provider: {
-            id: "p2",
-            businessName: "DetailMaster",
-            city: "Las Condes",
-        },
-        rating: 4.9,
-        duration: 180,
-        description: "Servicio de detailing profesional interior y exterior",
-        category: "detailing"
-    },
-    {
-        id: "3",
-        name: "Lavado Express",
-        price: 8000,
-        provider: {
-            id: "p3",
-            businessName: "Quick Shine",
-            city: "Ñuñoa",
-        },
-        rating: 4.5,
-        duration: 20,
-        description: "Lavado rápido exterior para cuando tienes poco tiempo",
-        category: "express"
-    },
-];
-
 export default function FavoritesPage() {
     const { user, isLoaded } = useUser();
-    const [favorites, setFavorites] = useState<ServiceItem[]>(mockFavorites);
+    const [favorites, setFavorites] = useState<ServiceItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'recent' | 'price' | 'rating'>('recent');

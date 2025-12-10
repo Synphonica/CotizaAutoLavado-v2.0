@@ -50,42 +50,7 @@ interface Promotion {
     createdAt: string;
 }
 
-const mockPromotions: Promotion[] = [
-    {
-        id: "1",
-        title: "Descuento Verano 2024",
-        description: "20% de descuento en todos los servicios de lavado completo",
-        discountType: "percentage",
-        discountValue: 20,
-        startDate: "2024-12-01",
-        endDate: "2025-02-28",
-        applicableServices: ["1", "2"],
-        isActive: true,
-        usageCount: 45,
-        createdAt: "2024-11-15",
-    },
-    {
-        id: "2",
-        title: "Promo Express",
-        description: "$2.000 de descuento en lavado express",
-        discountType: "fixed",
-        discountValue: 2000,
-        startDate: "2024-12-15",
-        endDate: "2024-12-31",
-        applicableServices: ["3"],
-        isActive: true,
-        usageCount: 12,
-        createdAt: "2024-12-01",
-    },
-];
-
-const mockServices = [
-    { id: "1", name: "Lavado Exterior Premium" },
-    { id: "2", name: "Lavado Completo + Encerado" },
-    { id: "3", name: "Lavado Express" },
-    { id: "4", name: "Detailing Completo" },
-    { id: "5", name: "Pulido de Pintura" },
-];
+// Los datos de promociones se cargan desde la API
 
 function PromotionsManagementContent() {
     const [promotions, setPromotions] = useState<Promotion[]>(mockPromotions);
