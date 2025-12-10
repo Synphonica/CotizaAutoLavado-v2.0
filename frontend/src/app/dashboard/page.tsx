@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+
+export const dynamic = 'force-dynamic';
 import { motion } from "framer-motion";
 import { ModernNavbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

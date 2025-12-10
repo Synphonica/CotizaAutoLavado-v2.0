@@ -3,6 +3,8 @@ import { SignUp } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const searchParams = useSearchParams();
   const role = searchParams?.get('role');
@@ -30,8 +32,8 @@ export default function Page() {
     <div className="min-h-[70vh] flex items-center justify-center py-10">
       <div className="mb-6 text-center">
       </div>
-      <SignUp 
-        routing="path" 
+      <SignUp
+        routing="path"
         path="/sign-up"
         afterSignUpUrl="/dashboard"
       />
