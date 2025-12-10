@@ -24,9 +24,8 @@ async function main() {
 
         // 2. Crear o actualizar proveedor
         const provider = await prisma.provider.upsert({
-            where: { email: 'turbolavado@ryn.cl' },
+            where: { userId: user.id },
             update: {
-                userId: user.id,
                 status: ProviderStatus.ACTIVE,
                 acceptsBookings: true,
             },
@@ -108,34 +107,45 @@ async function main() {
         console.log('\n📦 Creando servicios...\n');
 
         for (const [index, serviceData] of services.entries()) {
-            const service = await prisma.service.upsert({
+            // Buscar si el servicio ya existe
+            const existingService = await prisma.service.findFirst({
                 where: {
-                    providerId_name: {
-                        providerId: provider.id,
-                        name: serviceData.name,
-                    },
-                },
-                update: {
-                    description: serviceData.description,
-                    price: serviceData.price,
-                    duration: serviceData.duration,
-                    status: ServiceStatus.ACTIVE,
-                    isAvailable: true,
-                },
-                create: {
                     providerId: provider.id,
                     name: serviceData.name,
-                    description: serviceData.description,
-                    type: serviceData.type,
-                    status: ServiceStatus.ACTIVE,
-                    price: serviceData.price,
-                    duration: serviceData.duration,
-                    currency: 'CLP',
-                    isAvailable: true,
-                    isFeatured: index === 0,
-                    displayOrder: index,
                 },
             });
+
+            let service;
+            if (existingService) {
+                // Actualizar servicio existente
+                service = await prisma.service.update({
+                    where: { id: existingService.id },
+                    data: {
+                        description: serviceData.description,
+                        price: serviceData.price,
+                        duration: serviceData.duration,
+                        status: ServiceStatus.ACTIVE,
+                        isAvailable: true,
+                    },
+                });
+            } else {
+                // Crear nuevo servicio
+                service = await prisma.service.create({
+                    data: {
+                        providerId: provider.id,
+                        name: serviceData.name,
+                        description: serviceData.description,
+                        type: serviceData.type,
+                        status: ServiceStatus.ACTIVE,
+                        price: serviceData.price,
+                        duration: serviceData.duration,
+                        currency: 'CLP',
+                        isAvailable: true,
+                        isFeatured: index === 0,
+                        displayOrder: index,
+                    },
+                });
+            }
 
             console.log(`  ✅ ${service.name} - $${service.price}`);
         }
